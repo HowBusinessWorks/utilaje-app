@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+fleetops.db
+fleetops.db-shm
+fleetops.db-wal
+uploads/
