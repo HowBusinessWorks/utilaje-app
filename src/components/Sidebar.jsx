@@ -36,13 +36,10 @@ const navGroups = [
 
 export default function Sidebar({ open, onClose }) {
   return (
-    <aside className={[
-      'fixed inset-y-0 left-0 z-30 flex flex-col',
-      'w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700',
-      'transition-transform duration-200',
-      open ? 'translate-x-0' : '-translate-x-full',
-      'lg:relative lg:inset-auto lg:translate-x-0 lg:w-60 lg:shrink-0',
-    ].join(' ')}>
+    <aside
+      className="-translate-x-full fixed inset-y-0 left-0 z-30 flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-transform duration-200 lg:relative lg:inset-auto lg:translate-x-0 lg:w-60 lg:shrink-0"
+      style={open ? { transform: 'translateX(0)' } : undefined}
+    >
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
