@@ -294,14 +294,14 @@ export default function UtilajDetaliu() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/utilaje')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400">
+      <div className="flex flex-wrap items-start gap-3">
+        <button onClick={() => navigate('/utilaje')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 shrink-0">
           ← Inapoi
         </button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">{utilaj.denumire}</h2>
-            {utilaj.alias && <span className="text-gray-500 dark:text-gray-400 text-sm">({utilaj.alias})</span>}
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white truncate">{utilaj.denumire}</h2>
+            {utilaj.alias && <span className="text-gray-500 dark:text-gray-400 text-sm shrink-0">({utilaj.alias})</span>}
             <StatusBadge status={utilaj.status} size="md" />
           </div>
           {utilaj.categorie_nume && (
@@ -312,7 +312,7 @@ export default function UtilajDetaliu() {
           )}
         </div>
         <button onClick={() => setEditOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shrink-0">
           Editeaza
         </button>
       </div>
@@ -565,7 +565,7 @@ export default function UtilajDetaliu() {
           const obj = Object.fromEntries(fd);
           await handleEditSave(obj);
         }} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               { name: 'denumire', label: 'Denumire *', required: true, defaultValue: utilaj.denumire },
               { name: 'alias', label: 'Alias', defaultValue: utilaj.alias },
@@ -573,7 +573,7 @@ export default function UtilajDetaliu() {
               { name: 'nr_inventar', label: 'Nr. Inventar', defaultValue: utilaj.nr_inventar },
               { name: 'producator', label: 'Producator', defaultValue: utilaj.producator },
             ].map(f => (
-              <div key={f.name} className={f.name === 'denumire' ? 'col-span-2' : ''}>
+              <div key={f.name} className={f.name === 'denumire' ? 'sm:col-span-2' : ''}>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{f.label}</label>
                 <input name={f.name} required={f.required} defaultValue={f.defaultValue || ''} className={inputCls} />
               </div>
@@ -623,7 +623,7 @@ export default function UtilajDetaliu() {
       {/* Modal adauga motorina */}
       <Modal isOpen={addMotorinaOpen} onClose={() => setAddMotorinaOpen(false)} title="Adauga fisa motorina">
         <form onSubmit={handleAddMotorina} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data *</label>
               <input type="date" required value={motForm.data_consum} onChange={e => setMotForm(f => ({...f, data_consum: e.target.value}))} className={inputCls} />
@@ -680,7 +680,7 @@ export default function UtilajDetaliu() {
       {/* Modal adauga reparatie */}
       <Modal isOpen={addReparatieOpen} onClose={() => setAddReparatieOpen(false)} title="Adauga reparatie">
         <form onSubmit={handleAddReparatie} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data *</label>
               <input type="date" required value={repForm.data_reparatie} onChange={e => setRepForm(f => ({...f, data_reparatie: e.target.value}))} className={inputCls} />
@@ -689,7 +689,7 @@ export default function UtilajDetaliu() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Furnizor *</label>
               <input required value={repForm.furnizor} onChange={e => setRepForm(f => ({...f, furnizor: e.target.value}))} className={inputCls} />
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descriere *</label>
               <input required value={repForm.descriere} onChange={e => setRepForm(f => ({...f, descriere: e.target.value}))} className={inputCls} />
             </div>
@@ -726,7 +726,7 @@ export default function UtilajDetaliu() {
 
         {pvTab === 'predare' && (
           <form onSubmit={handleSavePvPredare} className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lucrare</label>
                 <select value={pvFormPredare.lucrare_id} onChange={e => setPvFormPredare(f => ({...f, lucrare_id: e.target.value}))} className={inputCls} disabled={!!pvEditing}>
@@ -766,7 +766,7 @@ export default function UtilajDetaliu() {
                   {['buna', 'acceptabila', 'deteriorata'].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                 </select>
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observatii predare</label>
                 <textarea value={pvFormPredare.observatii_predare} onChange={e => setPvFormPredare(f => ({...f, observatii_predare: e.target.value}))} className={inputCls + ' resize-none'} rows={2} disabled={!!pvEditing} />
               </div>
@@ -796,7 +796,7 @@ export default function UtilajDetaliu() {
               {pvEditing ? (
                 <>
                   {pvPoze.filter(p => p.etapa === 'predare').length > 0 && (
-                    <div className="grid grid-cols-4 gap-2 mb-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
                       {pvPoze.filter(p => p.etapa === 'predare').map(poza => (
                         <div key={poza.id} className="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                           <img src={poza.url} alt="" className="w-full h-20 object-cover" />
@@ -810,7 +810,7 @@ export default function UtilajDetaliu() {
               ) : (
                 <>
                   {pvPendingPoze.filter(p => p.etapa === 'predare').length > 0 && (
-                    <div className="grid grid-cols-4 gap-2 mb-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
                       {pvPendingPoze.filter(p => p.etapa === 'predare').map(p => (
                         <div key={p.localId} className="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                           <img src={URL.createObjectURL(p.file)} alt="" className="w-full h-20 object-cover" />
@@ -845,7 +845,7 @@ export default function UtilajDetaliu() {
 
         {pvTab === 'primire' && pvEditing && pvEditing.status === 'deschis' && (
           <form onSubmit={handleSavePvPrimire} className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data primire *</label>
                 <input type="date" required value={pvFormPrimire.data_primire} onChange={e => setPvFormPrimire(f => ({...f, data_primire: e.target.value}))} className={inputCls} />
@@ -871,11 +871,11 @@ export default function UtilajDetaliu() {
                   {['buna', 'acceptabila', 'deteriorata'].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                 </select>
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Probleme constatate</label>
                 <textarea value={pvFormPrimire.probleme_constatate} onChange={e => setPvFormPrimire(f => ({...f, probleme_constatate: e.target.value}))} className={inputCls + ' resize-none'} rows={2} />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observatii primire</label>
                 <textarea value={pvFormPrimire.observatii_primire} onChange={e => setPvFormPrimire(f => ({...f, observatii_primire: e.target.value}))} className={inputCls + ' resize-none'} rows={2} />
               </div>
@@ -906,7 +906,7 @@ export default function UtilajDetaliu() {
             <div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Poze primire</p>
               {pvPoze.filter(p => p.etapa === 'primire').length > 0 && (
-                <div className="grid grid-cols-4 gap-2 mb-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
                   {pvPoze.filter(p => p.etapa === 'primire').map(poza => (
                     <div key={poza.id} className="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                       <img src={poza.url} alt="" className="w-full h-20 object-cover" />
@@ -936,7 +936,7 @@ export default function UtilajDetaliu() {
       {/* Modal adauga planificare */}
       <Modal isOpen={addPlanificare} onClose={() => setAddPlanificare(false)} title="Adauga planificare">
         <form onSubmit={handleAddPlanificare} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data start *</label>
               <input type="date" required value={planForm.data_start} onChange={e => setPlanForm(f => ({...f, data_start: e.target.value}))} className={inputCls} />
@@ -959,7 +959,7 @@ export default function UtilajDetaliu() {
                 {persoane.map(p => <option key={p.id} value={p.id}>{p.nume}</option>)}
               </select>
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observatii</label>
               <input value={planForm.observatii} onChange={e => setPlanForm(f => ({...f, observatii: e.target.value}))} className={inputCls} />
             </div>

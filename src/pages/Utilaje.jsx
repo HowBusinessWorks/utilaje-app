@@ -27,8 +27,8 @@ function UtilajForm({ initial, categorii, persoane, locatii, onSave, onClose }) 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Denumire *</label>
           <input required value={form.denumire} onChange={e => set('denumire', e.target.value)}
             className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
@@ -109,7 +109,7 @@ function UtilajForm({ initial, categorii, persoane, locatii, onSave, onClose }) 
             className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
             placeholder="0" />
         </div>
-        <div className="col-span-2">
+        <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observatii</label>
           <textarea value={form.observatii} onChange={e => set('observatii', e.target.value)} rows={2}
             className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none" />
@@ -189,7 +189,7 @@ export default function Utilaje() {
             placeholder="Cauta utilaj..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none w-52"
+            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none w-full sm:w-52"
           />
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
             className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">

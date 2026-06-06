@@ -191,7 +191,7 @@ export default function ProceseVerbale() {
   const stariOptions = ['buna', 'acceptabila', 'deteriorata'];
 
   const PozaGrid = ({ poze, onDelete }) => poze.length > 0 ? (
-    <div className="grid grid-cols-4 gap-2 mb-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
       {poze.map((item) => (
         <div key={item.id} className="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
           <img src={item.url ?? URL.createObjectURL(item.file)} alt="" className="w-full h-20 object-cover" />
@@ -318,8 +318,8 @@ export default function ProceseVerbale() {
         {/* Tab Predare */}
         {tab === 'predare' && (
           <form onSubmit={handleSavePredare} className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Utilaj *</label>
                 <select required value={formPredare.utilaj_id} onChange={e => setFormPredare(f => ({...f, utilaj_id: e.target.value}))} className={inputCls} disabled={!!editing}>
                   <option value="">-- Selecteaza --</option>
@@ -365,7 +365,7 @@ export default function ProceseVerbale() {
                   {stariOptions.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                 </select>
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observatii predare</label>
                 <textarea value={formPredare.observatii_predare} onChange={e => setFormPredare(f => ({...f, observatii_predare: e.target.value}))} className={inputCls + ' resize-none'} rows={2} disabled={!!editing} />
               </div>
@@ -421,7 +421,7 @@ export default function ProceseVerbale() {
         {/* Tab Primire */}
         {tab === 'primire' && editing && editing.status === 'deschis' && (
           <form onSubmit={handleSavePrimire} className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data primire *</label>
                 <input type="date" required value={formPrimire.data_primire} onChange={e => setFormPrimire(f => ({...f, data_primire: e.target.value}))} className={inputCls} />
@@ -447,11 +447,11 @@ export default function ProceseVerbale() {
                   {stariOptions.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                 </select>
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Probleme constatate</label>
                 <textarea value={formPrimire.probleme_constatate} onChange={e => setFormPrimire(f => ({...f, probleme_constatate: e.target.value}))} className={inputCls + ' resize-none'} rows={2} />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observatii primire</label>
                 <textarea value={formPrimire.observatii_primire} onChange={e => setFormPrimire(f => ({...f, observatii_primire: e.target.value}))} className={inputCls + ' resize-none'} rows={2} />
               </div>

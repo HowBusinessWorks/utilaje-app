@@ -192,8 +192,8 @@ export default function Reparatii() {
       {/* Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editeaza reparatie' : 'Reparatie noua'}>
         <form onSubmit={handleSave} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Utilaj *</label>
               <select required value={form.utilaj_id} onChange={e => setForm(f => ({...f, utilaj_id: e.target.value}))} className={inputCls}>
                 <option value="">-- Selecteaza --</option>
@@ -208,7 +208,7 @@ export default function Reparatii() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Furnizor *</label>
               <input required value={form.furnizor} onChange={e => setForm(f => ({...f, furnizor: e.target.value}))} className={inputCls} />
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descriere *</label>
               <input required value={form.descriere} onChange={e => setForm(f => ({...f, descriere: e.target.value}))} className={inputCls} />
             </div>
@@ -224,7 +224,7 @@ export default function Reparatii() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ore contor</label>
               <input type="number" value={form.ore_contor} onChange={e => setForm(f => ({...f, ore_contor: e.target.value}))} className={inputCls} />
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observatii</label>
               <textarea value={form.observatii} onChange={e => setForm(f => ({...f, observatii: e.target.value}))} className={inputCls + ' resize-none'} rows={2} />
             </div>

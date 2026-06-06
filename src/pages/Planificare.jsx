@@ -479,8 +479,8 @@ export default function Planificare() {
       {/* Modal planificare noua / editare */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editingPlan ? 'Editeaza planificare' : 'Planificare noua'}>
         <form onSubmit={handleSave} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Utilaj *</label>
               <select required value={form.utilaj_id} onChange={e => setForm(f => ({ ...f, utilaj_id: e.target.value }))} className={inputCls}>
                 <option value="">-- Selecteaza --</option>
@@ -509,7 +509,7 @@ export default function Planificare() {
                 {persoane.map(p => <option key={p.id} value={p.id}>{p.nume}</option>)}
               </select>
             </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observatii</label>
               <input value={form.observatii} onChange={e => setForm(f => ({ ...f, observatii: e.target.value }))} className={inputCls} />
             </div>

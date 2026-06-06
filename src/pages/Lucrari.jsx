@@ -61,6 +61,7 @@ function LucrariTab({ toast }) {
       </div>
       {loading ? <div className="flex justify-center h-32"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mt-8"></div></div> : (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
@@ -88,6 +89,7 @@ function LucrariTab({ toast }) {
             </tbody>
           </table>
           {lucrari.length === 0 && <p className="text-center py-8 text-gray-400 text-sm">Nicio lucrare</p>}
+          </div>
         </div>
       )}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editeaza lucrare' : 'Lucrare noua'}>
@@ -103,7 +105,7 @@ function LucrariTab({ toast }) {
               {locatii.map(l => <option key={l.id} value={l.id}>{l.nume}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data start</label>
               <input type="date" value={form.data_start} onChange={e => setForm(f => ({...f, data_start: e.target.value}))} className={inputCls} />
@@ -172,6 +174,7 @@ function LocatiiTab({ toast }) {
       </div>
       {loading ? <div className="flex justify-center h-32"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mt-8"></div></div> : (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
@@ -203,6 +206,7 @@ function LocatiiTab({ toast }) {
             </tbody>
           </table>
           {locatii.length === 0 && <p className="text-center py-8 text-gray-400 text-sm">Nicio locatie</p>}
+          </div>
         </div>
       )}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editeaza locatie' : 'Locatie noua'}>
@@ -215,7 +219,7 @@ function LocatiiTab({ toast }) {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Adresa</label>
             <input value={form.adresa} onChange={e => setForm(f => ({...f, adresa: e.target.value}))} className={inputCls} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Latitudine</label>
               <input type="number" step="0.0001" value={form.lat} onChange={e => setForm(f => ({...f, lat: e.target.value}))} className={inputCls} placeholder="ex: 46.7712" />
@@ -344,10 +348,10 @@ export default function Lucrari() {
   return (
     <div className="space-y-5">
       <div className="border-b border-gray-200 dark:border-gray-700">
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto">
           {TABS.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
                 activeTab === tab
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
