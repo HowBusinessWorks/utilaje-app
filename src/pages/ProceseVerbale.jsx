@@ -26,13 +26,13 @@ export default function ProceseVerbale() {
 
   const [formPredare, setFormPredare] = useState({
     utilaj_id: '', lucrare_id: '', data_predare: new Date().toISOString().slice(0, 10),
-    persoana_primire_text: '', responsabil_predare: '',
+    persoana_primire_text: '', responsabil_predare: '', subcontractant_id: '', sef_santier_id: '',
     ore_contor_predare: '', motorina_predare: '', stare_predare: 'buna', observatii_predare: ''
   });
   const [formPrimire, setFormPrimire] = useState({
     data_primire: new Date().toISOString().slice(0, 10),
     responsabil_primire: '', ore_contor_primire: '', motorina_primire: '',
-    stare_primire: 'buna', observatii_primire: '', probleme_constatate: ''
+    stare_primire: 'buna', observatii_primire: ''
   });
 
   const load = async () => {
@@ -76,7 +76,7 @@ export default function ProceseVerbale() {
     setPvAccesorii([]);
     setSemnaturaPredare('');
     setSemnaturaPrimire('');
-    setFormPredare({ utilaj_id: '', lucrare_id: '', data_predare: new Date().toISOString().slice(0, 10), persoana_primire_text: '', responsabil_predare: '', ore_contor_predare: '', motorina_predare: '', stare_predare: 'buna', observatii_predare: '' });
+    setFormPredare({ utilaj_id: '', lucrare_id: '', data_predare: new Date().toISOString().slice(0, 10), persoana_primire_text: '', responsabil_predare: '', subcontractant_id: '', sef_santier_id: '', ore_contor_predare: '', motorina_predare: '', stare_predare: 'buna', observatii_predare: '' });
     setModalOpen(true);
   };
 
@@ -100,6 +100,8 @@ export default function ProceseVerbale() {
       data_predare: pv.data_predare || '',
       persoana_primire_text: pv.persoana_primire_display || pv.persoana_primire_text || '',
       responsabil_predare: pv.responsabil_predare || '',
+      subcontractant_id: String(pv.subcontractant_id || ''),
+      sef_santier_id: String(pv.sef_santier_id || ''),
       ore_contor_predare: String(pv.ore_contor_predare || ''),
       motorina_predare: String(pv.motorina_predare || ''),
       stare_predare: pv.stare_predare || 'buna',
@@ -111,8 +113,7 @@ export default function ProceseVerbale() {
       ore_contor_primire: String(pv.ore_contor_primire || ''),
       motorina_primire: String(pv.motorina_primire || ''),
       stare_primire: pv.stare_primire || 'buna',
-      observatii_primire: pv.observatii_primire || '',
-      probleme_constatate: pv.probleme_constatate || ''
+      observatii_primire: pv.observatii_primire || ''
     });
     setModalOpen(true);
   };
@@ -121,6 +122,10 @@ export default function ProceseVerbale() {
     e.preventDefault();
     try {
       if (editing) { toast('Datele de predare nu pot fi editate', 'warning'); return; }
+      if (!formPredare.sef_santier_id && !formPredare.subcontractant_id) {
+        toast('Trebuie selectat cel putin un Sef de santier sau un Subcontractant', 'error');
+        return;
+      }
       const result = await api.post('/pvp', {
         ...formPredare,
         accesorii: pvAccesorii,
@@ -189,14 +194,15 @@ export default function ProceseVerbale() {
 
   const inputCls = "w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none";
   const stariOptions = ['buna', 'acceptabila', 'deteriorata'];
+  const isReadOnly = !!(editing && editing.status === 'inchis');
 
   const PozaGrid = ({ poze, onDelete }) => poze.length > 0 ? (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
       {poze.map((item) => (
         <div key={item.id} className="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
           <img src={item.url ?? URL.createObjectURL(item.file)} alt="" className="w-full h-20 object-cover" />
-          <button type="button" onClick={() => onDelete(item.id)}
-            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+          {onDelete && <button type="button" onClick={() => onDelete(item.id)}
+            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">✕</button>}
         </div>
       ))}
     </div>
@@ -219,7 +225,7 @@ export default function ProceseVerbale() {
                   : a
                 ));
               }}
-              disabled={etapa === 'primire' && !acc.predat}
+              disabled={isReadOnly || (etapa === 'primire' && !acc.predat)}
               className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span className={`text-sm ${etapa === 'primire' && !acc.predat ? 'text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
@@ -246,7 +252,7 @@ export default function ProceseVerbale() {
           <select value={filterUtilaj} onChange={e => setFilterUtilaj(e.target.value)}
             className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
             <option value="">Toate utilajele</option>
-            {utilaje.map(u => <option key={u.id} value={u.id}>{u.alias || u.denumire}</option>)}
+            {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
           </select>
         </div>
         <button onClick={openNew} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -273,7 +279,7 @@ export default function ProceseVerbale() {
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {pvp.map(pv => (
                   <tr key={pv.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700/30 ${pv.status === 'deschis' ? 'bg-yellow-50/50 dark:bg-yellow-900/10' : ''}`}>
-                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">{pv.utilaj_alias || pv.utilaj_denumire}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">{pv.utilaj_denumire}</td>
                     <td className="px-4 py-3">{pv.lucrare_nume || '—'}</td>
                     <td className="px-4 py-3 whitespace-nowrap">{pv.data_predare || '—'}</td>
                     <td className="px-4 py-3">{pv.responsabil_predare || '—'}</td>
@@ -299,7 +305,7 @@ export default function ProceseVerbale() {
 
       {/* Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}
-        title={editing ? `PV #${editing.id} — ${editing.utilaj_alias || editing.utilaj_denumire}` : 'Proces verbal nou'}
+        title={editing ? `PV #${editing.id} — ${editing.utilaj_denumire}` : 'Proces verbal nou'}
         size="lg">
         {/* Tabs */}
         <div className="flex gap-1 mb-5 border-b border-gray-200 dark:border-gray-700">
@@ -307,10 +313,10 @@ export default function ProceseVerbale() {
             className={`px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors ${tab === 'predare' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400'}`}>
             Predare
           </button>
-          {editing && editing.status === 'deschis' && (
+          {editing && (
             <button onClick={() => setTab('primire')}
               className={`px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors ${tab === 'primire' ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400'}`}>
-              Primire (Inchidere)
+              {editing.status === 'deschis' ? 'Primire (Inchidere)' : 'Primire'}
             </button>
           )}
         </div>
@@ -323,7 +329,7 @@ export default function ProceseVerbale() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Utilaj *</label>
                 <select required value={formPredare.utilaj_id} onChange={e => setFormPredare(f => ({...f, utilaj_id: e.target.value}))} className={inputCls} disabled={!!editing}>
                   <option value="">-- Selecteaza --</option>
-                  {utilaje.map(u => <option key={u.id} value={u.id}>{u.alias || u.denumire}</option>)}
+                  {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
                 </select>
               </div>
               <div>
@@ -342,10 +348,28 @@ export default function ProceseVerbale() {
                 <input value={formPredare.persoana_primire_text} onChange={e => setFormPredare(f => ({...f, persoana_primire_text: e.target.value}))} className={inputCls} placeholder="Nume persoana" disabled={!!editing} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Responsabil predare</label>
-                <select value={formPredare.responsabil_predare} onChange={e => setFormPredare(f => ({...f, responsabil_predare: e.target.value}))} className={inputCls} disabled={!!editing}>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Responsabil utilaj *</label>
+                <select required value={formPredare.responsabil_predare} onChange={e => setFormPredare(f => ({...f, responsabil_predare: e.target.value}))} className={inputCls} disabled={!!editing}>
                   <option value="">-- Selecteaza --</option>
                   {persoane.map(p => <option key={p.id} value={p.nume}>{p.nume}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Sef de santier <span className="text-gray-400 font-normal">(cel putin unul)</span>
+                </label>
+                <select value={formPredare.sef_santier_id} onChange={e => setFormPredare(f => ({...f, sef_santier_id: e.target.value}))} className={inputCls} disabled={!!editing}>
+                  <option value="">-- Selecteaza --</option>
+                  {persoane.filter(p => p.categorie === 'sef_santier').map(p => <option key={p.id} value={p.id}>{p.nume}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Subcontractant <span className="text-gray-400 font-normal">(cel putin unul)</span>
+                </label>
+                <select value={formPredare.subcontractant_id} onChange={e => setFormPredare(f => ({...f, subcontractant_id: e.target.value}))} className={inputCls} disabled={!!editing}>
+                  <option value="">-- Selecteaza --</option>
+                  {persoane.filter(p => p.categorie === 'subcontractant').map(p => <option key={p.id} value={p.id}>{p.nume}</option>)}
                 </select>
               </div>
               <div>
@@ -355,7 +379,7 @@ export default function ProceseVerbale() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Motorina predare (%)</label>
                 <div className="relative">
-                  <input type="number" min="0" max="100" value={formPredare.motorina_predare} onChange={e => setFormPredare(f => ({...f, motorina_predare: e.target.value}))} className={inputCls + ' pr-8'} placeholder="0" disabled={!!editing} />
+                  <input type="number" min="0" max="100" value={formPredare.motorina_predare} onChange={e => setFormPredare(f => ({...f, motorina_predare: String(Math.min(100, Math.max(0, Number(e.target.value))))}))} className={inputCls + ' pr-8'} placeholder="0" disabled={!!editing} />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">%</span>
                 </div>
               </div>
@@ -384,8 +408,8 @@ export default function ProceseVerbale() {
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Poze predare</p>
               {editing ? (
                 <>
-                  <PozaGrid poze={pvPoze.filter(p => p.etapa === 'predare')} onDelete={handleDeletePvPoza} />
-                  <UploadZone onUpload={(file) => handleUploadPvPoza(file, 'predare')} label="Adauga poze predare" />
+                  <PozaGrid poze={pvPoze.filter(p => p.etapa === 'predare')} onDelete={isReadOnly ? null : handleDeletePvPoza} />
+                  {!isReadOnly && <UploadZone onUpload={(file) => handleUploadPvPoza(file, 'predare')} label="Adauga poze predare" />}
                 </>
               ) : (
                 <>
@@ -419,41 +443,37 @@ export default function ProceseVerbale() {
         )}
 
         {/* Tab Primire */}
-        {tab === 'primire' && editing && editing.status === 'deschis' && (
+        {tab === 'primire' && editing && (
           <form onSubmit={handleSavePrimire} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data primire *</label>
-                <input type="date" required value={formPrimire.data_primire} onChange={e => setFormPrimire(f => ({...f, data_primire: e.target.value}))} className={inputCls} />
+                <input type="date" required value={formPrimire.data_primire} onChange={e => setFormPrimire(f => ({...f, data_primire: e.target.value}))} className={inputCls} disabled={isReadOnly} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Responsabil primire</label>
-                <input value={formPrimire.responsabil_primire} onChange={e => setFormPrimire(f => ({...f, responsabil_primire: e.target.value}))} className={inputCls} />
+                <input value={formPrimire.responsabil_primire} onChange={e => setFormPrimire(f => ({...f, responsabil_primire: e.target.value}))} className={inputCls} disabled={isReadOnly} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ore contor primire</label>
-                <input type="number" value={formPrimire.ore_contor_primire} onChange={e => setFormPrimire(f => ({...f, ore_contor_primire: e.target.value}))} className={inputCls} />
+                <input type="number" value={formPrimire.ore_contor_primire} onChange={e => setFormPrimire(f => ({...f, ore_contor_primire: e.target.value}))} className={inputCls} disabled={isReadOnly} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Motorina primire (%)</label>
                 <div className="relative">
-                  <input type="number" min="0" max="100" value={formPrimire.motorina_primire} onChange={e => setFormPrimire(f => ({...f, motorina_primire: e.target.value}))} className={inputCls + ' pr-8'} placeholder="0" />
+                  <input type="number" min="0" max="100" value={formPrimire.motorina_primire} onChange={e => setFormPrimire(f => ({...f, motorina_primire: String(Math.min(100, Math.max(0, Number(e.target.value))))}))} className={inputCls + ' pr-8'} placeholder="0" disabled={isReadOnly} />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">%</span>
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stare la primire</label>
-                <select value={formPrimire.stare_primire} onChange={e => setFormPrimire(f => ({...f, stare_primire: e.target.value}))} className={inputCls}>
+                <select value={formPrimire.stare_primire} onChange={e => setFormPrimire(f => ({...f, stare_primire: e.target.value}))} className={inputCls} disabled={isReadOnly}>
                   {stariOptions.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Probleme constatate</label>
-                <textarea value={formPrimire.probleme_constatate} onChange={e => setFormPrimire(f => ({...f, probleme_constatate: e.target.value}))} className={inputCls + ' resize-none'} rows={2} />
-              </div>
-              <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observatii primire</label>
-                <textarea value={formPrimire.observatii_primire} onChange={e => setFormPrimire(f => ({...f, observatii_primire: e.target.value}))} className={inputCls + ' resize-none'} rows={2} />
+                <textarea value={formPrimire.observatii_primire} onChange={e => setFormPrimire(f => ({...f, observatii_primire: e.target.value}))} className={inputCls + ' resize-none'} rows={2} disabled={isReadOnly} />
               </div>
             </div>
 
@@ -468,8 +488,8 @@ export default function ProceseVerbale() {
             {/* Poze primire */}
             <div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Poze primire</p>
-              <PozaGrid poze={pvPoze.filter(p => p.etapa === 'primire')} onDelete={handleDeletePvPoza} />
-              <UploadZone onUpload={(file) => handleUploadPvPoza(file, 'primire')} label="Adauga poze primire" />
+              <PozaGrid poze={pvPoze.filter(p => p.etapa === 'primire')} onDelete={isReadOnly ? null : handleDeletePvPoza} />
+              {!isReadOnly && <UploadZone onUpload={(file) => handleUploadPvPoza(file, 'primire')} label="Adauga poze primire" />}
             </div>
 
             {/* Semnatura primire */}
@@ -477,12 +497,15 @@ export default function ProceseVerbale() {
               label="Semnatura responsabil primire"
               value={semnaturaPrimire}
               onChange={setSemnaturaPrimire}
+              disabled={isReadOnly}
             />
 
-            <div className="flex gap-3">
-              <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-medium">Inchide PV</button>
-              <button type="button" onClick={() => setModalOpen(false)} className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm font-medium">Anuleaza</button>
-            </div>
+            {!isReadOnly && (
+              <div className="flex gap-3">
+                <button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-medium">Inchide PV</button>
+                <button type="button" onClick={() => setModalOpen(false)} className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm font-medium">Anuleaza</button>
+              </div>
+            )}
           </form>
         )}
       </Modal>

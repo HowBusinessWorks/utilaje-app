@@ -88,12 +88,13 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { denumire, alias, serie, nr_inventar, responsabil_id, locatie_baza_id,
+    const { denumire, alias, serie, nr_inventar, nr_matriculare, responsabil_id, locatie_baza_id,
             producator, proprietate, garantie_exp, data_achizitie, observatii,
             status, categorie_id, chirie_zi } = req.body;
     const { data, error } = await supabase.from('utilaje')
       .insert({
         denumire, alias: alias || null, serie: serie || null, nr_inventar: nr_inventar || null,
+        nr_matriculare: nr_matriculare || null,
         responsabil_id: responsabil_id || null, locatie_baza_id: locatie_baza_id || null,
         producator: producator || null, proprietate: proprietate || 'propriu',
         garantie_exp: garantie_exp || null, data_achizitie: data_achizitie || null,
@@ -108,7 +109,7 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    const fields = ['denumire','alias','serie','nr_inventar','responsabil_id','locatie_baza_id',
+    const fields = ['denumire','alias','serie','nr_inventar','nr_matriculare','responsabil_id','locatie_baza_id',
                     'producator','proprietate','garantie_exp','data_achizitie','observatii',
                     'status','categorie_id','chirie_zi','ore_contor'];
     const updates = {};

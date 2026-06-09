@@ -51,6 +51,13 @@ router.delete('/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+router.delete('/:id/factura', async (req, res) => {
+  try {
+    await supabase.from('fise_reparatii').update({ factura_url: null }).eq('id', req.params.id);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 router.post('/:id/factura', upload.single('factura'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Fisier lipsa' });

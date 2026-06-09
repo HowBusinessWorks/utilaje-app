@@ -39,6 +39,14 @@ function getMonthEnd(dateStr) {
   return toDateStr(d);
 }
 
+function addMonths(dateStr, n) {
+  const [y, m] = dateStr.slice(0, 7).split('-').map(Number);
+  const total = (y * 12 + m - 1) + n;
+  const newY = Math.floor(total / 12);
+  const newM = (total % 12) + 1;
+  return `${newY}-${String(newM).padStart(2, '0')}-01`;
+}
+
 function getWeekStart(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
   const day = d.getDay(); // 0=dum, 1=lun, ..., 6=sam
@@ -46,7 +54,7 @@ function getWeekStart(dateStr) {
   return toDateStr(d);
 }
 
-const DAY_WIDTHS = { week: 65, '2weeks': 50, month: 34 };
+const DAY_WIDTHS = { week: 65, '2weeks': 50, month: 34, '3months': 24 };
 const ROW_HEIGHT = 52;
 const DAY_NAMES = ['Lu', 'Ma', 'Mi', 'Jo', 'Vi', 'Sa', 'Du'];
 
@@ -82,19 +90,36 @@ export default function Planificare() {
   const windowEnd = (() => {
     if (viewMode === 'week') return addDays(windowStart, 6);
     if (viewMode === '2weeks') return addDays(windowStart, 13);
+    if (viewMode === '3months') return getMonthEnd(addMonths(windowStart, 2));
     return getMonthEnd(windowStart);
   })();
   const days = dateRange(windowStart, windowEnd);
   const DAY_WIDTH = DAY_WIDTHS[viewMode];
 
+  const monthBands = viewMode === '3months' ? (() => {
+    const bands = [];
+    let cur = null;
+    for (const day of days) {
+      const key = day.slice(0, 7);
+      if (!cur || cur.key !== key) {
+        cur = { key, days: [day], label: new Date(day + 'T00:00:00').toLocaleDateString('ro-RO', { month: 'short', year: 'numeric' }) };
+        bands.push(cur);
+      } else {
+        cur.days.push(day);
+      }
+    }
+    return bands;
+  })() : [];
+
   const goToday = () => {
-    if (viewMode === 'month') setWindowStart(getMonthStart(today));
+    if (viewMode === 'month' || viewMode === '3months') setWindowStart(getMonthStart(today));
     else setWindowStart(getWeekStart(today));
   };
 
   const navPrev = () => {
     if (viewMode === 'week') setWindowStart(addDays(windowStart, -7));
     else if (viewMode === '2weeks') setWindowStart(addDays(windowStart, -14));
+    else if (viewMode === '3months') setWindowStart(addMonths(windowStart, -3));
     else {
       // Aritmetica directa pe an/luna — evita bug-ul de timezone cu Date.setMonth
       const [y, m] = windowStart.slice(0, 7).split('-').map(Number);
@@ -107,6 +132,7 @@ export default function Planificare() {
   const navNext = () => {
     if (viewMode === 'week') setWindowStart(addDays(windowStart, 7));
     else if (viewMode === '2weeks') setWindowStart(addDays(windowStart, 14));
+    else if (viewMode === '3months') setWindowStart(addMonths(windowStart, 3));
     else {
       const [y, m] = windowStart.slice(0, 7).split('-').map(Number);
       const newM = m === 12 ? 1 : m + 1;
@@ -117,7 +143,7 @@ export default function Planificare() {
 
   const switchView = (mode) => {
     setViewMode(mode);
-    if (mode === 'month') setWindowStart(getMonthStart(windowStart));
+    if (mode === 'month' || mode === '3months') setWindowStart(getMonthStart(windowStart));
     else setWindowStart(getWeekStart(windowStart));
   };
 
@@ -247,6 +273,8 @@ export default function Planificare() {
 
   const windowLabel = viewMode === 'month'
     ? new Date(windowStart + 'T00:00:00').toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' })
+    : viewMode === '3months'
+    ? `${new Date(windowStart + 'T00:00:00').toLocaleDateString('ro-RO', { month: 'short', year: 'numeric' })} — ${new Date(addMonths(windowStart, 2) + 'T00:00:00').toLocaleDateString('ro-RO', { month: 'short', year: 'numeric' })}`
     : `${windowStart} — ${windowEnd}`;
 
   const inputCls = "w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none";
@@ -272,7 +300,7 @@ export default function Planificare() {
         </button>
 
         <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden ml-1">
-          {[['week', 'Săpt.'], ['2weeks', '2 Săpt.'], ['month', 'Lună']].map(([mode, label]) => (
+          {[['week', 'Săpt.'], ['2weeks', '2 Săpt.'], ['month', 'Lună'], ['3months', '3 Luni']].map(([mode, label]) => (
             <button key={mode} onClick={() => switchView(mode)}
               className={`px-3 py-2 text-sm transition-colors border-r border-gray-300 dark:border-gray-600 last:border-r-0 ${
                 viewMode === mode
@@ -288,7 +316,7 @@ export default function Planificare() {
           <select value={filterUtilaj} onChange={e => setFilterUtilaj(e.target.value)}
             className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
             <option value="">Toate utilajele</option>
-            {utilaje.map(u => <option key={u.id} value={u.id}>{u.alias || u.denumire}</option>)}
+            {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
           </select>
           <select value={filterCategorie} onChange={e => setFilterCategorie(e.target.value)}
             className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
@@ -311,39 +339,59 @@ export default function Planificare() {
           <div className="overflow-x-auto">
             <div style={{ minWidth: 200 + days.length * DAY_WIDTH }}>
               {/* Header */}
-              <div className="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 sticky top-0 z-10">
-                <div style={{ width: 200, minWidth: 200 }}
-                  className="px-4 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600">
-                  Utilaj
-                </div>
-                <div className="flex">
-                  {days.map(day => {
-                    const d = new Date(day + 'T00:00:00');
-                    const dayName = DAY_NAMES[d.getDay() === 0 ? 6 : d.getDay() - 1];
-                    const isToday = day === today;
-                    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                    return (
-                      <div key={day} style={{ width: DAY_WIDTH }}
-                        className={`border-r border-gray-100 dark:border-gray-700 text-center py-1.5 ${
-                          isToday ? 'bg-blue-100 dark:bg-blue-900/40' : isWeekend ? 'bg-gray-100 dark:bg-gray-700/60' : ''
-                        }`}>
-                        {viewMode !== 'month'
-                          ? <>
-                              <p className="text-xs text-gray-400 dark:text-gray-500 leading-none">{dayName}</p>
-                              <p className={`text-xs font-semibold mt-0.5 ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
+              <div className="bg-gray-50 dark:bg-gray-700/50 sticky top-0 z-10">
+                {/* Banda luni — doar pentru view 3 luni */}
+                {viewMode === '3months' && (
+                  <div className="flex border-b border-gray-200 dark:border-gray-700">
+                    <div style={{ width: 200, minWidth: 200 }} className="border-r border-gray-200 dark:border-gray-600" />
+                    <div className="flex">
+                      {monthBands.map(band => (
+                        <div key={band.key} style={{ width: band.days.length * DAY_WIDTH }}
+                          className="text-xs font-semibold text-gray-600 dark:text-gray-300 text-center py-1 border-r border-gray-200 dark:border-gray-600 capitalize truncate px-1">
+                          {band.label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="flex border-b border-gray-200 dark:border-gray-700">
+                  <div style={{ width: 200, minWidth: 200 }}
+                    className="px-4 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600">
+                    Utilaj
+                  </div>
+                  <div className="flex">
+                    {days.map(day => {
+                      const d = new Date(day + 'T00:00:00');
+                      const dayName = DAY_NAMES[d.getDay() === 0 ? 6 : d.getDay() - 1];
+                      const isToday = day === today;
+                      const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                      return (
+                        <div key={day} style={{ width: DAY_WIDTH }}
+                          className={`border-r border-gray-100 dark:border-gray-700 text-center py-1 ${
+                            isToday ? 'bg-blue-100 dark:bg-blue-900/40' : isWeekend ? 'bg-gray-100 dark:bg-gray-700/60' : ''
+                          }`}>
+                          {viewMode === '3months'
+                            ? <p className={`font-semibold leading-none ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`} style={{ fontSize: 9 }}>
                                 {day.slice(8)}
                               </p>
-                            </>
-                          : <>
-                              <p className={`text-xs font-semibold leading-none ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
-                                {day.slice(8)}
-                              </p>
-                              <p className="text-gray-400 dark:text-gray-500 leading-none mt-0.5" style={{ fontSize: 9 }}>{dayName}</p>
-                            </>
-                        }
-                      </div>
-                    );
-                  })}
+                            : viewMode !== 'month'
+                            ? <>
+                                <p className="text-xs text-gray-400 dark:text-gray-500 leading-none">{dayName}</p>
+                                <p className={`text-xs font-semibold mt-0.5 ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                                  {day.slice(8)}
+                                </p>
+                              </>
+                            : <>
+                                <p className={`text-xs font-semibold leading-none ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                                  {day.slice(8)}
+                                </p>
+                                <p className="text-gray-400 dark:text-gray-500 leading-none mt-0.5" style={{ fontSize: 9 }}>{dayName}</p>
+                              </>
+                          }
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -361,7 +409,7 @@ export default function Planificare() {
                         <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: utilaj.categorie_culoare }} />
                       )}
                       <div className="min-w-0">
-                        <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{utilaj.alias || utilaj.denumire}</p>
+                        <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{utilaj.denumire}</p>
                         {utilaj.alias && <p className="text-xs text-gray-400 truncate">{utilaj.denumire}</p>}
                       </div>
                     </div>
@@ -484,7 +532,7 @@ export default function Planificare() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Utilaj *</label>
               <select required value={form.utilaj_id} onChange={e => setForm(f => ({ ...f, utilaj_id: e.target.value }))} className={inputCls}>
                 <option value="">-- Selecteaza --</option>
-                {utilaje.map(u => <option key={u.id} value={u.id}>{u.alias || u.denumire}</option>)}
+                {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
               </select>
             </div>
             <div>
@@ -515,28 +563,30 @@ export default function Planificare() {
             </div>
           </div>
 
-          {/* Decalaj rapid */}
-          <div className="border-t border-gray-100 dark:border-gray-700 pt-3">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Decaleaza planificarea cu</p>
-            <div className="flex items-center gap-2 flex-wrap">
-              {[-7, -1, 1, 7].map(n => (
-                <button key={n} type="button"
-                  onClick={() => setForm(f => ({ ...f, data_start: addDays(f.data_start, n), data_sfarsit: addDays(f.data_sfarsit, n) }))}
-                  className="px-2.5 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-mono transition-colors">
-                  {n > 0 ? `+${n}z` : `${n}z`}
-                </button>
-              ))}
-              <div className="flex items-center gap-1 ml-1">
-                <input type="number" value={shiftDays} onChange={e => setShiftDays(e.target.value)}
-                  placeholder="±zile"
-                  className="w-16 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-xs bg-white dark:bg-gray-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500" />
-                <button type="button" onClick={applyShift}
-                  className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors">
-                  Aplica
-                </button>
+          {/* Decalaj rapid — doar la editare */}
+          {editingPlan && (
+            <div className="border-t border-gray-100 dark:border-gray-700 pt-3">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Decaleaza planificarea cu</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                {[-7, -1, 1, 7].map(n => (
+                  <button key={n} type="button"
+                    onClick={() => setForm(f => ({ ...f, data_start: addDays(f.data_start, n), data_sfarsit: addDays(f.data_sfarsit, n) }))}
+                    className="px-2.5 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-mono transition-colors">
+                    {n > 0 ? `+${n}z` : `${n}z`}
+                  </button>
+                ))}
+                <div className="flex items-center gap-1 ml-1">
+                  <input type="number" value={shiftDays} onChange={e => setShiftDays(e.target.value)}
+                    placeholder="±zile"
+                    className="w-16 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-xs bg-white dark:bg-gray-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500" />
+                  <button type="button" onClick={applyShift}
+                    className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors">
+                    Aplica
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="flex gap-3 pt-1">
             <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium transition-colors">
@@ -600,7 +650,7 @@ export default function Planificare() {
                     }))}
                     className="rounded accent-blue-600"
                   />
-                  <span className="text-sm text-gray-600 dark:text-gray-300">{u.alias || u.denumire}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{u.denumire}</span>
                 </label>
               ))}
             </div>

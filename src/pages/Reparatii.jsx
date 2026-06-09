@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import { useToast } from '../App';
 import Modal from '../components/Modal';
@@ -13,6 +13,8 @@ export default function Reparatii() {
   const [filterEnd, setFilterEnd] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [pendingDoc, setPendingDoc] = useState(null);
+  const fileRef = useRef(null);
   const [form, setForm] = useState({
     utilaj_id: '', data_reparatie: new Date().toISOString().slice(0, 10),
     furnizor: '', descriere: '', cost_total: '', ore_contor: '', durata_zile: '', observatii: ''
@@ -41,12 +43,14 @@ export default function Reparatii() {
 
   const openNew = () => {
     setEditing(null);
+    setPendingDoc(null);
     setForm({ utilaj_id: '', data_reparatie: new Date().toISOString().slice(0, 10), furnizor: '', descriere: '', cost_total: '', ore_contor: '', durata_zile: '', observatii: '' });
     setModalOpen(true);
   };
 
   const openEdit = (r) => {
     setEditing(r);
+    setPendingDoc(null);
     setForm({
       utilaj_id: String(r.utilaj_id),
       data_reparatie: r.data_reparatie,
@@ -63,12 +67,22 @@ export default function Reparatii() {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
+      let id;
       if (editing) {
         await api.put(`/reparatii/${editing.id}`, form);
+        id = editing.id;
         toast('Reparatie actualizata!');
       } else {
-        await api.post('/reparatii', form);
+        const result = await api.post('/reparatii', form);
+        id = result.id;
         toast('Reparatie adaugata!');
+      }
+      if (pendingDoc === '__remove__') {
+        await api.delete(`/reparatii/${id}/factura`);
+      } else if (pendingDoc) {
+        const fd = new FormData();
+        fd.append('factura', pendingDoc);
+        await api.upload(`/reparatii/${id}/factura`, fd);
       }
       setModalOpen(false);
       load();
@@ -84,19 +98,10 @@ export default function Reparatii() {
     } catch (e) { toast(e.message, 'error'); }
   };
 
-  const handleUploadFactura = async (reparatieId, file) => {
-    const fd = new FormData();
-    fd.append('factura', file);
-    try {
-      await api.upload(`/reparatii/${reparatieId}/factura`, fd);
-      toast('Factura incarcata!');
-      load();
-    } catch (e) { toast(e.message, 'error'); }
-  };
-
   const totalCost = reparatii.reduce((s, r) => s + (r.cost_total || 0), 0);
 
   const inputCls = "w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none";
+  const docName = (url) => url ? url.split('/').pop() : '';
 
   return (
     <div className="space-y-5">
@@ -106,7 +111,7 @@ export default function Reparatii() {
           <select value={filterUtilaj} onChange={e => setFilterUtilaj(e.target.value)}
             className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
             <option value="">Toate utilajele</option>
-            {utilaje.map(u => <option key={u.id} value={u.id}>{u.alias || u.denumire}</option>)}
+            {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
           </select>
           <input type="date" value={filterStart} onChange={e => setFilterStart(e.target.value)}
             className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
@@ -147,7 +152,7 @@ export default function Reparatii() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  {['Data', 'Utilaj', 'Furnizor', 'Descriere', 'Cost (RON)', 'Durata', 'Ore contor', 'Factura', ''].map(h => (
+                  {['Data', 'Utilaj', 'Furnizor', 'Descriere', 'Cost (RON)', 'Durata', 'Ore contor', ''].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">{h}</th>
                   ))}
                 </tr>
@@ -156,24 +161,12 @@ export default function Reparatii() {
                 {reparatii.map(r => (
                   <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
                     <td className="px-4 py-3 whitespace-nowrap">{r.data_reparatie}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">{r.utilaj_alias || r.utilaj_denumire}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">{r.utilaj_denumire}</td>
                     <td className="px-4 py-3 whitespace-nowrap">{r.furnizor}</td>
                     <td className="px-4 py-3 max-w-xs truncate">{r.descriere}</td>
                     <td className="px-4 py-3 font-bold text-red-600 dark:text-red-400 whitespace-nowrap">{r.cost_total?.toLocaleString('ro-RO')}</td>
                     <td className="px-4 py-3 whitespace-nowrap">{r.durata_zile ? r.durata_zile + ' zile' : '—'}</td>
                     <td className="px-4 py-3">{r.ore_contor || '—'}</td>
-                    <td className="px-4 py-3">
-                      {r.factura_url ? (
-                        <a href={r.factura_url} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 text-xs hover:underline">
-                          Descarca
-                        </a>
-                      ) : (
-                        <label className="cursor-pointer text-xs text-gray-500 hover:text-blue-500">
-                          📎 Upload
-                          <input type="file" className="hidden" onChange={e => e.target.files[0] && handleUploadFactura(r.id, e.target.files[0])} />
-                        </label>
-                      )}
-                    </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
                         <button onClick={() => openEdit(r)} className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-gray-600 dark:text-gray-300">Edit</button>
@@ -197,7 +190,7 @@ export default function Reparatii() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Utilaj *</label>
               <select required value={form.utilaj_id} onChange={e => setForm(f => ({...f, utilaj_id: e.target.value}))} className={inputCls}>
                 <option value="">-- Selecteaza --</option>
-                {utilaje.map(u => <option key={u.id} value={u.id}>{u.alias || u.denumire}</option>)}
+                {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
               </select>
             </div>
             <div>
@@ -229,6 +222,33 @@ export default function Reparatii() {
               <textarea value={form.observatii} onChange={e => setForm(f => ({...f, observatii: e.target.value}))} className={inputCls + ' resize-none'} rows={2} />
             </div>
           </div>
+          {/* Document */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Factura / Document</label>
+            {editing && editing.factura_url && !pendingDoc && (
+              <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg mb-2 text-sm">
+                <span className="text-gray-500">📄</span>
+                <a href={editing.factura_url} target="_blank" rel="noreferrer"
+                  className="text-blue-600 dark:text-blue-400 hover:underline truncate flex-1">
+                  {docName(editing.factura_url)}
+                </a>
+                <button type="button" onClick={() => setPendingDoc('__remove__')} className="text-red-400 hover:text-red-600 text-xs">✕ Sterge</button>
+              </div>
+            )}
+            {pendingDoc && pendingDoc !== '__remove__' && (
+              <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-2 text-sm">
+                <span className="text-blue-500">📄</span>
+                <span className="text-blue-700 dark:text-blue-300 truncate flex-1">{pendingDoc.name}</span>
+                <button type="button" onClick={() => setPendingDoc(null)} className="text-red-400 hover:text-red-600 text-xs">✕</button>
+              </div>
+            )}
+            <input ref={fileRef} type="file" className="hidden" onChange={e => { if (e.target.files[0]) setPendingDoc(e.target.files[0]); e.target.value = ''; }} />
+            <button type="button" onClick={() => fileRef.current?.click()}
+              className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm text-gray-500 dark:text-gray-400 hover:border-blue-400 dark:hover:border-blue-500 transition-colors text-center">
+              📎 Click pentru a atasa un document
+            </button>
+          </div>
+
           <div className="flex gap-3">
             <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium">Salveaza</button>
             <button type="button" onClick={() => setModalOpen(false)} className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm font-medium">Anuleaza</button>

@@ -126,7 +126,7 @@ export default function Dashboard() {
                 {data.planificariActive.map(p => (
                   <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
                     <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                      {p.utilaj_alias || p.utilaj_denumire}
+                      {p.utilaj_denumire}
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{p.lucrare_nume || '—'}</td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{p.data_start}</td>

@@ -163,7 +163,7 @@ function TabPerUtilaj() {
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Selecteaza utilaj</label>
         <select value={selectedUtilaj} onChange={e => setSelectedUtilaj(e.target.value)} className={inputCls + ' w-64'}>
           <option value="">-- Alege un utilaj --</option>
-          {utilaje.map(u => <option key={u.id} value={u.id}>{u.alias || u.denumire}</option>)}
+          {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
         </select>
       </div>
 
@@ -382,7 +382,7 @@ function TabPerLucrare() {
                     {(data.orePerUtilaj || []).map((r, idx) => (
                       <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
                         <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
-                          {r.utilaj_alias || r.utilaj_denumire}
+                          {r.utilaj_denumire}
                         </td>
                         <td className="px-4 py-3">
                           {r.ore_lucrate > 0 ? (
@@ -430,7 +430,7 @@ function TabPerLucrare() {
             <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
               <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Ore lucrate per utilaj</h4>
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={(data.orePerUtilaj || []).map(r => ({ ...r, utilaj: r.utilaj_alias || r.utilaj_denumire }))}>
+                <BarChart data={(data.orePerUtilaj || []).map(r => ({ ...r, utilaj: r.utilaj_denumire }))}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="utilaj" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
@@ -462,7 +462,7 @@ function TabPerLucrare() {
                     const zile = Math.round((end - start) / 86400000) + 1;
                     return (
                       <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                        <td className="px-4 py-3 font-medium">{p.utilaj_alias || p.utilaj_denumire}</td>
+                        <td className="px-4 py-3 font-medium">{p.utilaj_denumire}</td>
                         <td className="px-4 py-3">{p.data_start}</td>
                         <td className="px-4 py-3">{p.data_sfarsit}</td>
                         <td className="px-4 py-3">{zile} zile</td>

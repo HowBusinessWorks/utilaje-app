@@ -173,8 +173,8 @@ export default function Harta() {
               <Marker key={utilaj.id} position={[loc.lat, loc.lng]} icon={icon}>
                 <Popup>
                   <div className="min-w-44">
-                    <p className="font-semibold text-sm">{utilaj.alias || utilaj.denumire}</p>
-                    {utilaj.alias && <p className="text-xs text-gray-500">{utilaj.denumire}</p>}
+                    <p className="font-semibold text-sm">{utilaj.denumire}</p>
+                    {utilaj.alias && <p className="text-xs text-gray-500">{utilaj.alias}</p>}
                     <div className="mt-2 space-y-1">
                       <p className="text-xs">
                         <span className="font-medium">Status:</span>{' '}

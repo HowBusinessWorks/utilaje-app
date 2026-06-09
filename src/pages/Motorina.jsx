@@ -51,7 +51,7 @@ export default function Motorina() {
   const openNew = () => {
     setEditing(null);
     setPendingDoc(null);
-    setForm({ utilaj_id: '', lucrare_id: '', persoana_id: '', data_consum: new Date().toISOString().slice(0, 10), nr_litri: '', furnizor: '', ore_contor: '', observatii: '' });
+    setForm({ utilaj_id: '', lucrare_id: '', persoana_id: '', data_consum: new Date().toISOString().slice(0, 10), nr_litri: '', furnizor: 'MOL', ore_contor: '', observatii: '' });
     setModalOpen(true);
   };
 
@@ -127,7 +127,7 @@ export default function Motorina() {
           <select value={filterUtilaj} onChange={e => setFilterUtilaj(e.target.value)}
             className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
             <option value="">Toate utilajele</option>
-            {utilaje.map(u => <option key={u.id} value={u.id}>{u.alias || u.denumire}</option>)}
+            {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
           </select>
           <select value={filterLucrare} onChange={e => setFilterLucrare(e.target.value)}
             className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
@@ -186,7 +186,7 @@ export default function Motorina() {
                   <tr key={f.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
                     <td className="px-4 py-3 whitespace-nowrap">{f.data_consum}</td>
                     <td className="px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                      {f.utilaj_alias || f.utilaj_denumire}
+                      {f.utilaj_denumire}
                     </td>
                     <td className="px-4 py-3 font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">{f.nr_litri} L</td>
                     <td className="px-4 py-3">{f.furnizor || '—'}</td>
@@ -227,7 +227,7 @@ export default function Motorina() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Utilaj *</label>
               <select required value={form.utilaj_id} onChange={e => setForm(f => ({...f, utilaj_id: e.target.value}))} className={inputCls}>
                 <option value="">-- Selecteaza --</option>
-                {utilaje.map(u => <option key={u.id} value={u.id}>{u.alias || u.denumire}</option>)}
+                {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
               </select>
             </div>
             <div>
@@ -266,32 +266,34 @@ export default function Motorina() {
             </div>
           </div>
 
-          {/* Document */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Document (factura, bon etc.)</label>
-            {editing && editing.document_url && !pendingDoc && (
-              <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg mb-2 text-sm">
-                <span className="text-gray-500">📄</span>
-                <a href={editing.document_url} target="_blank" rel="noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:underline truncate flex-1">
-                  {docName(editing.document_url)}
-                </a>
-                <button type="button" onClick={() => setPendingDoc('__remove__')} className="text-red-400 hover:text-red-600 text-xs">✕ Sterge</button>
-              </div>
-            )}
-            {pendingDoc && pendingDoc !== '__remove__' && (
-              <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-2 text-sm">
-                <span className="text-blue-500">📄</span>
-                <span className="text-blue-700 dark:text-blue-300 truncate flex-1">{pendingDoc.name}</span>
-                <button type="button" onClick={() => setPendingDoc(null)} className="text-red-400 hover:text-red-600 text-xs">✕</button>
-              </div>
-            )}
-            <input ref={fileRef} type="file" className="hidden" onChange={e => { if (e.target.files[0]) setPendingDoc(e.target.files[0]); e.target.value = ''; }} />
-            <button type="button" onClick={() => fileRef.current?.click()}
-              className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm text-gray-500 dark:text-gray-400 hover:border-blue-400 dark:hover:border-blue-500 transition-colors text-center">
-              📎 Click pentru a atasa un document
-            </button>
-          </div>
+          {/* Document — doar la editare */}
+          {editing && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Document (factura, bon etc.)</label>
+              {editing.document_url && !pendingDoc && (
+                <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg mb-2 text-sm">
+                  <span className="text-gray-500">📄</span>
+                  <a href={editing.document_url} target="_blank" rel="noreferrer"
+                    className="text-blue-600 dark:text-blue-400 hover:underline truncate flex-1">
+                    {docName(editing.document_url)}
+                  </a>
+                  <button type="button" onClick={() => setPendingDoc('__remove__')} className="text-red-400 hover:text-red-600 text-xs">✕ Sterge</button>
+                </div>
+              )}
+              {pendingDoc && pendingDoc !== '__remove__' && (
+                <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-2 text-sm">
+                  <span className="text-blue-500">📄</span>
+                  <span className="text-blue-700 dark:text-blue-300 truncate flex-1">{pendingDoc.name}</span>
+                  <button type="button" onClick={() => setPendingDoc(null)} className="text-red-400 hover:text-red-600 text-xs">✕</button>
+                </div>
+              )}
+              <input ref={fileRef} type="file" className="hidden" onChange={e => { if (e.target.files[0]) setPendingDoc(e.target.files[0]); e.target.value = ''; }} />
+              <button type="button" onClick={() => fileRef.current?.click()}
+                className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-sm text-gray-500 dark:text-gray-400 hover:border-blue-400 dark:hover:border-blue-500 transition-colors text-center">
+                📎 Click pentru a atasa un document
+              </button>
+            </div>
+          )}
 
           <div className="flex gap-3">
             <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium">Salveaza</button>

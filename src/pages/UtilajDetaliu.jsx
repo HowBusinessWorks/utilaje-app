@@ -341,6 +341,7 @@ export default function UtilajDetaliu() {
             <Field label="Alias" value={utilaj.alias} />
             <Field label="Serie" value={utilaj.serie} />
             <Field label="Nr. Inventar" value={utilaj.nr_inventar} />
+            <Field label="Nr. Matriculare" value={utilaj.nr_matriculare} />
             <Field label="Producator" value={utilaj.producator} />
             <Field label="Proprietate" value={utilaj.proprietate} />
             <Field label="Status" value={utilaj.status} />
@@ -571,6 +572,7 @@ export default function UtilajDetaliu() {
               { name: 'alias', label: 'Alias', defaultValue: utilaj.alias },
               { name: 'serie', label: 'Serie', defaultValue: utilaj.serie },
               { name: 'nr_inventar', label: 'Nr. Inventar', defaultValue: utilaj.nr_inventar },
+              { name: 'nr_matriculare', label: 'Nr. Matriculare', defaultValue: utilaj.nr_matriculare },
               { name: 'producator', label: 'Producator', defaultValue: utilaj.producator },
             ].map(f => (
               <div key={f.name} className={f.name === 'denumire' ? 'sm:col-span-2' : ''}>
@@ -598,11 +600,26 @@ export default function UtilajDetaliu() {
               </select>
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Locatie baza</label>
+              <select name="locatie_baza_id" defaultValue={utilaj.locatie_baza_id || ''} className={selCls}>
+                <option value="">-- Selecteaza --</option>
+                {locatii.map(l => <option key={l.id} value={l.id}>{l.nume}</option>)}
+              </select>
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categorie</label>
               <select name="categorie_id" defaultValue={utilaj.categorie_id || ''} className={selCls}>
                 <option value="">-- Selecteaza --</option>
                 {categorii.map(c => <option key={c.id} value={c.id}>{c.nume}</option>)}
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data achizitie</label>
+              <input name="data_achizitie" type="date" defaultValue={utilaj.data_achizitie || ''} className={inputCls} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Garantie expira</label>
+              <input name="garantie_exp" type="date" defaultValue={utilaj.garantie_exp || ''} className={inputCls} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ore contor</label>

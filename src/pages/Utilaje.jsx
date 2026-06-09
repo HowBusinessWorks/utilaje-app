@@ -10,7 +10,7 @@ const proprietateOptions = ['propriu', 'inchiriat', 'leasing'];
 
 function UtilajForm({ initial, categorii, persoane, locatii, onSave, onClose }) {
   const [form, setForm] = useState({
-    denumire: '', alias: '', serie: '', nr_inventar: '', producator: '',
+    denumire: '', alias: '', serie: '', nr_inventar: '', nr_matriculare: '', producator: '',
     categorie_id: '', status: 'disponibil', proprietate: 'propriu',
     responsabil_id: '', locatie_baza_id: '', data_achizitie: '',
     garantie_exp: '', chirie_zi: '', observatii: '',
@@ -49,6 +49,12 @@ function UtilajForm({ initial, categorii, persoane, locatii, onSave, onClose }) 
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nr. Inventar</label>
           <input value={form.nr_inventar} onChange={e => set('nr_inventar', e.target.value)}
             className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nr. Matriculare</label>
+          <input value={form.nr_matriculare} onChange={e => set('nr_matriculare', e.target.value)}
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="ex: B 123 XYZ" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Producator</label>

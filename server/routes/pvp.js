@@ -36,7 +36,8 @@ router.post('/', async (req, res) => {
   try {
     const { utilaj_id, lucrare_id, data_predare, persoana_primire_text,
             responsabil_predare, ore_contor_predare, motorina_predare,
-            stare_predare, observatii_predare, accesorii, semnatura_predare } = req.body;
+            stare_predare, observatii_predare, accesorii, semnatura_predare,
+            subcontractant_id, sef_santier_id } = req.body;
     const { data, error } = await supabase.from('procese_verbale')
       .insert({
         utilaj_id, lucrare_id: lucrare_id || null, data_predare: data_predare || null,
@@ -45,6 +46,8 @@ router.post('/', async (req, res) => {
         ore_contor_predare: ore_contor_predare || null, motorina_predare: motorina_predare || null,
         stare_predare: stare_predare || null, observatii_predare: observatii_predare || null,
         semnatura_predare: semnatura_predare || null, status: 'deschis',
+        subcontractant_id: subcontractant_id || null,
+        sef_santier_id: sef_santier_id || null,
       })
       .select('id').single();
     if (error) throw error;

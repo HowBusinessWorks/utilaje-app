@@ -72,6 +72,7 @@ export default function Persoane() {
 
   const angajatiCount = persoane.filter(p => p.categorie === 'angajat').length;
   const subcontractantiCount = persoane.filter(p => p.categorie === 'subcontractant').length;
+  const sefiCount = persoane.filter(p => p.categorie === 'sef_santier').length;
 
   return (
     <div className="space-y-5">
@@ -80,6 +81,7 @@ export default function Persoane() {
         <div className="flex gap-1">
           {[
             { key: 'angajat', label: `Angajati (${angajatiCount})` },
+            { key: 'sef_santier', label: `Sefi santier (${sefiCount})` },
             { key: 'subcontractant', label: `Subcontractanti (${subcontractantiCount})` },
           ].map(tab => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -129,9 +131,11 @@ export default function Persoane() {
                 <p className="font-medium text-gray-900 dark:text-white truncate">{p.nume}</p>
                 {p.telefon && <p className="text-sm text-gray-500 dark:text-gray-400">{p.telefon}</p>}
                 <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium mt-1 ${
-                  p.categorie === 'angajat' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+                  p.categorie === 'angajat' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                  : p.categorie === 'sef_santier' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                  : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
                 }`}>
-                  {p.categorie === 'angajat' ? 'Angajat' : 'Subcontractant'}
+                  {p.categorie === 'angajat' ? 'Angajat' : p.categorie === 'sef_santier' ? 'Sef santier' : 'Subcontractant'}
                 </span>
               </div>
               <div className="flex gap-1 shrink-0">
@@ -158,6 +162,7 @@ export default function Persoane() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categorie *</label>
             <select value={form.categorie} onChange={e => setForm(f => ({...f, categorie: e.target.value}))} className={inputCls}>
               <option value="angajat">Angajat</option>
+              <option value="sef_santier">Sef santier</option>
               <option value="subcontractant">Subcontractant</option>
             </select>
           </div>
