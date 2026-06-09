@@ -272,6 +272,15 @@ export default function UtilajDetaliu() {
     } catch (e) { toast(e.message, 'error'); }
   };
 
+  const handleDeleteUtilaj = async () => {
+    if (!confirm(`Stergi utilajul "${utilaj.denumire}"? Aceasta actiune este ireversibila.`)) return;
+    try {
+      await api.delete(`/utilaje/${id}`);
+      toast('Utilaj sters!');
+      navigate('/utilaje');
+    } catch (e) { toast(e.message, 'error'); }
+  };
+
   const handleDeletePoza = async (pozaId) => {
     if (!confirm('Stergi poza?')) return;
     try {
@@ -314,6 +323,10 @@ export default function UtilajDetaliu() {
         <button onClick={() => setEditOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shrink-0">
           Editeaza
+        </button>
+        <button onClick={handleDeleteUtilaj}
+          className="bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors shrink-0">
+          Sterge
         </button>
       </div>
 
