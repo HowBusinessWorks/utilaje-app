@@ -62,7 +62,7 @@ function PretMotorina() {
   return (
     <div className="mt-2">
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Pret motorina azi</p>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         <input
           ref={inputRef}
           type="number"
@@ -72,19 +72,19 @@ function PretMotorina() {
           onChange={e => { setPret(e.target.value); setSaved(false); }}
           onKeyDown={e => e.key === 'Enter' && handleSave()}
           placeholder="0.00"
-          className="w-full min-w-0 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs bg-white dark:bg-gray-700 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none"
+          className="w-20 min-w-0 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs bg-white dark:bg-gray-700 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none"
         />
         <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">RON/L</span>
         <button
           onClick={handleSave}
           disabled={saving}
-          className={`shrink-0 px-2 py-1 rounded text-xs font-medium transition-colors ${
+          className={`shrink-0 flex-1 px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
             saved
               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
               : 'bg-blue-600 hover:bg-blue-700 text-white'
           }`}
         >
-          {saved ? '✓' : saving ? '…' : 'Salv'}
+          {saved ? '✓ Salvat' : saving ? '…' : 'Salveaza'}
         </button>
       </div>
     </div>
