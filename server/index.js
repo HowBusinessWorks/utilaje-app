@@ -13,7 +13,8 @@ app.use('/api/pvp',         require('./routes/pvp'));
 app.use('/api/reparatii',   require('./routes/reparatii'));
 app.use('/api/lucrari',     require('./routes/lucrari'));
 app.use('/api/persoane',    require('./routes/persoane'));
-app.use('/api/rapoarte',    require('./routes/rapoarte'));
+app.use('/api/rapoarte',         require('./routes/rapoarte'));
+app.use('/api/preturi-motorina', require('./routes/preturiMotorina'));
 
 if (require.main === module) {
   app.listen(3001, () => console.log('FleetOps server -> http://localhost:3001'));

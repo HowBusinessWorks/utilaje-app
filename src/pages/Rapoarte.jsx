@@ -6,11 +6,130 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 const TABS = ['General', 'Per Utilaj', 'Per Lucrare', 'Sumar'];
 
 const lunaNames = { '01':'Ian','02':'Feb','03':'Mar','04':'Apr','05':'Mai','06':'Iun','07':'Iul','08':'Aug','09':'Sep','10':'Oct','11':'Nov','12':'Dec' };
+
+function businessDays(startStr, endStr) {
+  let count = 0;
+  const d = new Date(startStr);
+  const end = new Date(endStr);
+  while (d <= end) {
+    const dow = d.getDay();
+    if (dow !== 0 && dow !== 6) count++;
+    d.setDate(d.getDate() + 1);
+  }
+  return count;
+}
 const fmtLuna = (luna) => {
   if (!luna) return luna;
   const parts = luna.split('-');
   return (lunaNames[parts[1]] || parts[1]) + ' ' + parts[0];
 };
+
+const TYPE_CFG = {
+  motorina:   { label: 'Motorina',    color: '#3b82f6' },
+  reparatie:  { label: 'Reparatie',   color: '#ef4444' },
+  pv_predare: { label: 'PV Predare',  color: '#22c55e' },
+  pv_primire: { label: 'PV Primire',  color: '#a855f7' },
+};
+
+function GraficTimeline({ motorina, reparatii, pvp }) {
+  const parseDate = (s) => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d).getTime(); };
+  const fmtDate  = (ts) => { const d = new Date(ts); return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getFullYear()).slice(2)}`; };
+
+  const allPoints = [
+    ...(motorina || []).filter(m => m.ore_contor != null).map(m => ({
+      x: parseDate(m.data_consum), y: Number(m.ore_contor), type: 'motorina',
+      label: `${m.nr_litri} L motorina`, sub: m.furnizor || '',
+    })),
+    ...(reparatii || []).filter(r => r.ore_contor != null).map(r => ({
+      x: parseDate(r.data_reparatie), y: Number(r.ore_contor), type: 'reparatie',
+      label: r.descriere || 'Reparatie', sub: r.furnizor || '',
+    })),
+    ...(pvp || []).filter(p => p.ore_contor_predare != null && p.data_predare).map(p => ({
+      x: parseDate(p.data_predare), y: Number(p.ore_contor_predare), type: 'pv_predare',
+      label: 'PV Predare', sub: p.lucrare_nume || '',
+    })),
+    ...(pvp || []).filter(p => p.ore_contor_primire != null && p.data_primire).map(p => ({
+      x: parseDate(p.data_primire), y: Number(p.ore_contor_primire), type: 'pv_primire',
+      label: 'PV Primire', sub: p.lucrare_nume || '',
+    })),
+  ].sort((a, b) => a.x - b.x);
+
+  const presentTypes = [...new Set(allPoints.map(p => p.type))];
+
+  const CustomDot = (props) => {
+    const { cx, cy, payload, index } = props;
+    if (cx == null || cy == null) return null;
+    const color = TYPE_CFG[payload?.type]?.color || '#94a3b8';
+    return <circle key={index} cx={cx} cy={cy} r={5} fill={color} stroke="white" strokeWidth={2} />;
+  };
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (!active || !payload?.length) return null;
+    const pt = payload[0]?.payload;
+    if (!pt) return null;
+    const cfg = TYPE_CFG[pt.type];
+    return (
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg text-xs space-y-0.5 max-w-[200px]">
+        <p className="font-semibold" style={{ color: cfg?.color }}>{cfg?.label}</p>
+        <p className="text-gray-500">{fmtDate(pt.x)}</p>
+        <p className="text-gray-900 dark:text-white font-medium">{Number(pt.y).toLocaleString('ro-RO')} ore</p>
+        <p className="text-gray-700 dark:text-gray-300">{pt.label}</p>
+        {pt.sub && <p className="text-gray-400">{pt.sub}</p>}
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+      <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Evolutie ore contor</h4>
+      {allPoints.length < 2 ? (
+        <p className="text-sm text-gray-400 text-center py-8">Nu exista suficiente inregistrari cu ore contor completat</p>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-4 mb-3">
+            {presentTypes.map(t => (
+              <span key={t} className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300">
+                <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: TYPE_CFG[t]?.color }} />
+                {TYPE_CFG[t]?.label}
+              </span>
+            ))}
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <ComposedChart data={allPoints} margin={{ top: 10, right: 20, bottom: 45, left: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis
+                dataKey="x"
+                type="number"
+                scale="time"
+                domain={['dataMin', 'dataMax']}
+                tickFormatter={fmtDate}
+                tick={{ fontSize: 10 }}
+                angle={-35}
+                textAnchor="end"
+                height={60}
+              />
+              <YAxis
+                tick={{ fontSize: 11 }}
+                tickFormatter={v => v.toLocaleString('ro-RO')}
+                width={65}
+                label={{ value: 'ore', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#9ca3af' }}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Line
+                dataKey="y"
+                stroke="#94a3b8"
+                strokeWidth={2}
+                dot={CustomDot}
+                activeDot={{ r: 7, stroke: 'white', strokeWidth: 2 }}
+                isAnimationActive={false}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </>
+      )}
+    </div>
+  );
+}
 
 function StatCard({ value, label, color = 'text-blue-600 dark:text-blue-400', sub }) {
   return (
@@ -120,6 +239,18 @@ function TabGeneral() {
                   </td>
                 </tr>
               ))}
+              {data.byCategorie.length > 0 && (() => {
+                const totTotal = data.byCategorie.reduce((s, c) => s + c.total, 0);
+                const totDisp = data.byCategorie.reduce((s, c) => s + (c.disponibile || 0), 0);
+                return (
+                  <tr className="bg-gray-50 dark:bg-gray-700/30 font-semibold">
+                    <td className="px-4 py-3 text-gray-900 dark:text-white">Total</td>
+                    <td className="px-4 py-3 text-gray-900 dark:text-white">{totTotal}</td>
+                    <td className="px-4 py-3 text-gray-900 dark:text-white">{totDisp}</td>
+                    <td className="px-4 py-3 text-gray-900 dark:text-white">{totTotal ? Math.round((totDisp / totTotal) * 100) : 0}%</td>
+                  </tr>
+                );
+              })()}
             </tbody>
           </table>
         </div>
@@ -132,6 +263,8 @@ function TabPerUtilaj() {
   const toast = useToast();
   const [utilaje, setUtilaje] = useState([]);
   const [selectedUtilaj, setSelectedUtilaj] = useState('');
+  const [dataStart, setDataStart] = useState('');
+  const [dataEnd, setDataEnd] = useState('');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -141,12 +274,16 @@ function TabPerUtilaj() {
 
   useEffect(() => {
     if (!selectedUtilaj) { setData(null); return; }
+    const params = new URLSearchParams();
+    if (dataStart) params.set('data_start', dataStart);
+    if (dataEnd) params.set('data_end', dataEnd);
+    const qs = params.toString() ? `?${params.toString()}` : '';
     setLoading(true);
-    api.get(`/rapoarte/utilaj/${selectedUtilaj}`)
+    api.get(`/rapoarte/utilaj/${selectedUtilaj}${qs}`)
       .then(setData)
       .catch(e => toast('Eroare: ' + e.message, 'error'))
       .finally(() => setLoading(false));
-  }, [selectedUtilaj]);
+  }, [selectedUtilaj, dataStart, dataEnd]);
 
   const inputCls = "border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none";
 
@@ -159,12 +296,29 @@ function TabPerUtilaj() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Selecteaza utilaj</label>
-        <select value={selectedUtilaj} onChange={e => setSelectedUtilaj(e.target.value)} className={inputCls + ' w-64'}>
-          <option value="">-- Alege un utilaj --</option>
-          {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
-        </select>
+      <div className="flex flex-wrap gap-4 items-end">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Selecteaza utilaj</label>
+          <select value={selectedUtilaj} onChange={e => setSelectedUtilaj(e.target.value)} className={inputCls + ' w-64'}>
+            <option value="">-- Alege un utilaj --</option>
+            {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data start</label>
+          <input type="date" value={dataStart} onChange={e => setDataStart(e.target.value)} className={inputCls} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data sfarsit</label>
+          <input type="date" value={dataEnd} onChange={e => setDataEnd(e.target.value)} className={inputCls} />
+        </div>
+        {(dataStart || dataEnd) && (
+          <button
+            onClick={() => { setDataStart(''); setDataEnd(''); }}
+            className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors">
+            Reseteaza filtru
+          </button>
+        )}
       </div>
 
       {loading && <div className="flex justify-center h-32"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mt-8"></div></div>}
@@ -173,7 +327,12 @@ function TabPerUtilaj() {
         <div className="space-y-5">
           {/* KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard value={`${(data.totalMotorinaLitri || 0).toLocaleString('ro-RO')} L`} label="Total motorina" color="text-blue-600 dark:text-blue-400" />
+            <StatCard
+              value={`${(data.totalMotorinaLitri || 0).toLocaleString('ro-RO')} L`}
+              label="Total motorina"
+              color="text-blue-600 dark:text-blue-400"
+              sub={data.totalCostMotorinaRON != null ? `≈ ${data.totalCostMotorinaRON.toLocaleString('ro-RO')} RON` : null}
+            />
             <StatCard value={`${(data.totalCosturiReparatii || 0).toLocaleString('ro-RO')} RON`} label="Total reparatii" color="text-red-600 dark:text-red-400" />
             <StatCard
               value={(data.totalOreLucrate || 0) > 0 ? `${data.totalOreLucrate.toLocaleString('ro-RO')} h` : '—'}
@@ -187,6 +346,9 @@ function TabPerUtilaj() {
               color="text-orange-600 dark:text-orange-400"
             />
           </div>
+
+          {/* Grafic evolutie ore contor */}
+          <GraficTimeline motorina={data.motorina} reparatii={data.reparatii} pvp={data.pvp} />
 
           {/* Grafic activitate lunara */}
           {activitateCuNume.length > 0 && (
@@ -242,10 +404,10 @@ function TabPerUtilaj() {
                       </tr>
                     ))}
                     <tr className="bg-gray-50 dark:bg-gray-700/30 font-semibold">
-                      <td className="px-4 py-3">Total</td>
-                      <td className="px-4 py-3 text-purple-600 dark:text-purple-400">{(data.totalOreLucrate || 0) > 0 ? `${data.totalOreLucrate.toLocaleString('ro-RO')} h` : '—'}</td>
-                      <td className="px-4 py-3 text-orange-600 dark:text-orange-400">{(data.totalZileLucrate || 0) > 0 ? `${data.totalZileLucrate} zile` : '—'}</td>
-                      <td className="px-4 py-3 text-gray-500">{activitateCuNume.reduce((s, r) => s + r.nr_pv, 0)} PV</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">Total</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">{(data.totalOreLucrate || 0) > 0 ? `${data.totalOreLucrate.toLocaleString('ro-RO')} h` : '—'}</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">{(data.totalZileLucrate || 0) > 0 ? `${data.totalZileLucrate} zile` : '—'}</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">{activitateCuNume.reduce((s, r) => s + r.nr_pv, 0)} PV</td>
                     </tr>
                   </tbody>
                 </table>
@@ -260,44 +422,86 @@ function TabPerUtilaj() {
           )}
 
           {/* Motorina si reparatii */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Ultime fise motorina</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead><tr className="text-gray-500 dark:text-gray-400"><th className="text-left pb-2">Data</th><th className="text-left pb-2">Litri</th><th className="text-left pb-2">Furnizor</th></tr></thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {data.motorina.slice(0, 10).map(m => (
-                      <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                        <td className="py-2">{m.data_consum}</td>
-                        <td className="py-2 font-medium text-blue-600 dark:text-blue-400">{m.nr_litri} L</td>
-                        <td className="py-2">{m.furnizor || '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {data.motorina.length === 0 && <p className="text-gray-400 text-xs text-center py-4">Nu exista fise</p>}
+          {(() => {
+            const motRows = (dataStart && dataEnd) ? data.motorina : data.motorina.slice(0, 10);
+            const repRows = (dataStart && dataEnd) ? data.reparatii : data.reparatii.slice(0, 10);
+            const totalLitri = motRows.reduce((s, m) => s + (m.nr_litri || 0), 0);
+            const totalCost = repRows.reduce((s, r) => s + (r.cost_total || 0), 0);
+            return (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                    {(dataStart && dataEnd) ? `Fise motorina (${data.motorina.length})` : 'Ultime fise motorina'}
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="text-gray-500 dark:text-gray-400">
+                          <th className="text-left pb-2">Data</th>
+                          <th className="text-left pb-2">Litri</th>
+                          <th className="text-left pb-2">Pret/L</th>
+                          <th className="text-left pb-2">Total RON</th>
+                          <th className="text-left pb-2">Furnizor</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {motRows.map(m => (
+                          <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                            <td className="py-2">{m.data_consum}</td>
+                            <td className="py-2 font-medium">{m.nr_litri} L</td>
+                            <td className="py-2">{m.pret_per_litru != null ? `${Number(m.pret_per_litru).toFixed(2)} RON` : '—'}</td>
+                            <td className="py-2 font-medium">{m.cost_motorina != null ? `${Number(m.cost_motorina).toLocaleString('ro-RO')} RON` : '—'}</td>
+                            <td className="py-2">{m.furnizor || '—'}</td>
+                          </tr>
+                        ))}
+                        {motRows.length > 0 && (
+                          <tr className="bg-gray-50 dark:bg-gray-700/30 font-semibold border-t border-gray-200 dark:border-gray-600">
+                            <td className="py-2 text-gray-900 dark:text-white">Total</td>
+                            <td className="py-2 text-gray-900 dark:text-white">{totalLitri.toLocaleString('ro-RO')} L</td>
+                            <td></td>
+                            <td className="py-2 text-gray-900 dark:text-white">
+                              {motRows.some(m => m.cost_motorina != null)
+                                ? `${motRows.reduce((s, m) => s + (m.cost_motorina != null ? Number(m.cost_motorina) : 0), 0).toLocaleString('ro-RO')} RON`
+                                : '—'}
+                            </td>
+                            <td></td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                    {data.motorina.length === 0 && <p className="text-gray-400 text-xs text-center py-4">Nu exista fise</p>}
+                  </div>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                    {(dataStart && dataEnd) ? `Reparatii (${data.reparatii.length})` : 'Ultime reparatii'}
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead><tr className="text-gray-500 dark:text-gray-400"><th className="text-left pb-2">Data</th><th className="text-left pb-2">Cost</th><th className="text-left pb-2">Furnizor</th></tr></thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {repRows.map(r => (
+                          <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                            <td className="py-2">{r.data_reparatie}</td>
+                            <td className="py-2 font-medium text-red-600 dark:text-red-400">{r.cost_total?.toLocaleString('ro-RO')} RON</td>
+                            <td className="py-2">{r.furnizor}</td>
+                          </tr>
+                        ))}
+                        {repRows.length > 0 && (
+                          <tr className="bg-gray-50 dark:bg-gray-700/30 font-semibold border-t border-gray-200 dark:border-gray-600">
+                            <td className="py-2 text-gray-900 dark:text-white">Total</td>
+                            <td className="py-2 text-gray-900 dark:text-white">{totalCost.toLocaleString('ro-RO')} RON</td>
+                            <td></td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                    {data.reparatii.length === 0 && <p className="text-gray-400 text-xs text-center py-4">Nu exista reparatii</p>}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Ultime reparatii</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead><tr className="text-gray-500 dark:text-gray-400"><th className="text-left pb-2">Data</th><th className="text-left pb-2">Cost</th><th className="text-left pb-2">Furnizor</th></tr></thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {data.reparatii.slice(0, 10).map(r => (
-                      <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                        <td className="py-2">{r.data_reparatie}</td>
-                        <td className="py-2 font-medium text-red-600 dark:text-red-400">{r.cost_total?.toLocaleString('ro-RO')} RON</td>
-                        <td className="py-2">{r.furnizor}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {data.reparatii.length === 0 && <p className="text-gray-400 text-xs text-center py-4">Nu exista reparatii</p>}
-              </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       )}
 
@@ -349,7 +553,12 @@ function TabPerLucrare() {
         <div className="space-y-5">
           {/* KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard value={`${(data.totalLitri || 0).toLocaleString('ro-RO')} L`} label="Consum motorina" color="text-blue-600 dark:text-blue-400" />
+            <StatCard
+              value={`${(data.totalLitri || 0).toLocaleString('ro-RO')} L`}
+              label="Consum motorina"
+              color="text-blue-600 dark:text-blue-400"
+              sub={data.totalCostMotorinaRON != null ? `≈ ${data.totalCostMotorinaRON.toLocaleString('ro-RO')} RON` : null}
+            />
             <StatCard value={`${(data.planificari || []).length}`} label="Planificari" color="text-gray-700 dark:text-gray-300" />
             <StatCard
               value={(data.totalOreLucrare || 0) > 0 ? `${data.totalOreLucrare.toLocaleString('ro-RO')} h` : '—'}
@@ -408,10 +617,10 @@ function TabPerLucrare() {
                       </tr>
                     ))}
                     <tr className="bg-gray-50 dark:bg-gray-700/30 font-semibold">
-                      <td className="px-4 py-3">Total</td>
-                      <td className="px-4 py-3 text-purple-600 dark:text-purple-400">{(data.totalOreLucrare || 0) > 0 ? `${data.totalOreLucrare.toLocaleString('ro-RO')} h` : '—'}</td>
-                      <td className="px-4 py-3 text-orange-600 dark:text-orange-400">{(data.totalZileLucrare || 0) > 0 ? `${data.totalZileLucrare} zile` : '—'}</td>
-                      <td className="px-4 py-3 text-gray-500">{(data.orePerUtilaj || []).reduce((s, r) => s + r.nr_pv, 0)} PV</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">Total</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">{(data.totalOreLucrare || 0) > 0 ? `${data.totalOreLucrare.toLocaleString('ro-RO')} h` : '—'}</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">{(data.totalZileLucrare || 0) > 0 ? `${data.totalZileLucrare} zile` : '—'}</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">{(data.orePerUtilaj || []).reduce((s, r) => s + r.nr_pv, 0)} PV</td>
                     </tr>
                   </tbody>
                 </table>
@@ -457,18 +666,24 @@ function TabPerLucrare() {
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {data.planificari.map(p => {
-                    const start = new Date(p.data_start);
-                    const end = new Date(p.data_sfarsit);
-                    const zile = Math.round((end - start) / 86400000) + 1;
+                    const zile = businessDays(p.data_start, p.data_sfarsit);
                     return (
                       <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
                         <td className="px-4 py-3 font-medium">{p.utilaj_denumire}</td>
                         <td className="px-4 py-3">{p.data_start}</td>
                         <td className="px-4 py-3">{p.data_sfarsit}</td>
-                        <td className="px-4 py-3">{zile} zile</td>
+                        <td className="px-4 py-3">{zile} zile lucratoare</td>
                       </tr>
                     );
                   })}
+                  {data.planificari.length > 0 && (
+                    <tr className="bg-gray-50 dark:bg-gray-700/30 font-semibold">
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-200" colSpan={3}>Total</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">
+                        {data.planificari.reduce((s, p) => s + businessDays(p.data_start, p.data_sfarsit), 0)} zile lucratoare
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
               {data.planificari.length === 0 && <p className="text-center py-6 text-gray-400 text-sm">Nicio planificare</p>}
@@ -484,7 +699,7 @@ function TabPerLucrare() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 dark:bg-gray-700/50">
                   <tr>
-                    {['Data', 'Utilaj', 'Litri', 'Furnizor'].map(h => (
+                    {['Data', 'Utilaj', 'Litri', 'Pret/L', 'Total RON', 'Furnizor'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">{h}</th>
                     ))}
                   </tr>
@@ -495,9 +710,30 @@ function TabPerLucrare() {
                       <td className="px-4 py-3">{m.data_consum}</td>
                       <td className="px-4 py-3">{m.utilaj_denumire}</td>
                       <td className="px-4 py-3 font-medium text-blue-600 dark:text-blue-400">{m.nr_litri} L</td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
+                        {m.pret_per_litru != null ? `${Number(m.pret_per_litru).toLocaleString('ro-RO')} RON` : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                        {m.cost_motorina != null ? `${Number(m.cost_motorina).toLocaleString('ro-RO')} RON` : '—'}
+                      </td>
                       <td className="px-4 py-3">{m.furnizor || '—'}</td>
                     </tr>
                   ))}
+                  {data.motorina.length > 0 && (
+                    <tr className="bg-gray-50 dark:bg-gray-700/30 font-semibold">
+                      <td className="px-4 py-3 text-gray-900 dark:text-white" colSpan={2}>Total</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">
+                        {data.motorina.reduce((s, m) => s + (m.nr_litri || 0), 0).toLocaleString('ro-RO')} L
+                      </td>
+                      <td></td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">
+                        {data.motorina.some(m => m.cost_motorina != null)
+                          ? `${data.motorina.reduce((s, m) => s + (m.cost_motorina != null ? Number(m.cost_motorina) : 0), 0).toLocaleString('ro-RO')} RON`
+                          : '—'}
+                      </td>
+                      <td></td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
               {data.motorina.length === 0 && <p className="text-center py-6 text-gray-400 text-sm">Nicio fisa</p>}
@@ -590,6 +826,21 @@ function TabSumar() {
                   </tr>
                 );
               })}
+              {data.byCategorie.length > 0 && (() => {
+                const totTotal = data.byCategorie.reduce((s, c) => s + c.total, 0);
+                const totDisp = data.byCategorie.reduce((s, c) => s + (c.disponibile || 0), 0);
+                const totOcup = totTotal - totDisp;
+                const totPct = totTotal ? Math.round((totDisp / totTotal) * 100) : 0;
+                return (
+                  <tr className="bg-gray-50 dark:bg-gray-700/30 font-semibold">
+                    <td className="px-4 py-3 text-gray-900 dark:text-white">Total</td>
+                    <td className="px-4 py-3 text-gray-900 dark:text-white">{totTotal}</td>
+                    <td className="px-4 py-3 text-gray-900 dark:text-white">{totDisp}</td>
+                    <td className="px-4 py-3 text-gray-900 dark:text-white">{totOcup}</td>
+                    <td className="px-4 py-3 text-gray-900 dark:text-white">{totPct}%</td>
+                  </tr>
+                );
+              })()}
             </tbody>
           </table>
         </div>
