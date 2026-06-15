@@ -12,6 +12,7 @@ import Reparatii from './pages/Reparatii';
 import Lucrari from './pages/Lucrari';
 import Persoane from './pages/Persoane';
 import Rapoarte from './pages/Rapoarte';
+import PVPrint from './pages/PVPrint';
 
 export const ToastContext = createContext(null);
 
@@ -44,6 +45,7 @@ export default function App() {
         <div className={darkMode ? 'dark' : ''}>
           <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
             <Routes>
+              <Route path="procese-verbale/:id/print" element={<PVPrint />} />
               <Route path="/" element={<Layout darkMode={darkMode} setDarkMode={setDarkMode} />}>
                 <Route index element={<Navigate to="/dashboard" replace />} />
                 <Route path="dashboard" element={<Dashboard />} />

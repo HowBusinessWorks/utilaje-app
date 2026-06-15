@@ -38,6 +38,11 @@ router.post('/', async (req, res) => {
             responsabil_predare, ore_contor_predare, motorina_predare,
             stare_predare, observatii_predare, accesorii, semnatura_predare,
             subcontractant_id, sef_santier_id } = req.body;
+    const { data: openPv } = await supabase.from('procese_verbale')
+      .select('id').eq('utilaj_id', utilaj_id).eq('status', 'deschis').maybeSingle();
+    if (openPv) {
+      return res.status(409).json({ error: 'Exista deja un PV deschis pentru acest utilaj. Inchide PV-ul curent inainte de a crea unul nou.' });
+    }
     const { data, error } = await supabase.from('procese_verbale')
       .insert({
         utilaj_id, lucrare_id: lucrare_id || null, data_predare: data_predare || null,

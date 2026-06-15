@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../App';
 import Modal from '../components/Modal';
@@ -60,6 +61,7 @@ const DAY_NAMES = ['Lu', 'Ma', 'Mi', 'Jo', 'Vi', 'Sa', 'Du'];
 
 export default function Planificare() {
   const toast = useToast();
+  const navigate = useNavigate();
   const today = toDateStr(new Date());
 
   const [planificari, setPlanificari] = useState([]);
@@ -408,10 +410,7 @@ export default function Planificare() {
                       {utilaj.categorie_culoare && (
                         <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: utilaj.categorie_culoare }} />
                       )}
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{utilaj.denumire}</p>
-                        {utilaj.alias && <p className="text-xs text-gray-400 truncate">{utilaj.denumire}</p>}
-                      </div>
+                      <p className="text-xs font-medium text-gray-900 dark:text-white leading-tight break-words min-w-0">{utilaj.denumire}</p>
                     </div>
                     {/* Gantt area */}
                     <div className="relative flex" style={{ width: days.length * DAY_WIDTH }}>
@@ -603,6 +602,30 @@ export default function Planificare() {
               Anuleaza
             </button>
           </div>
+
+          {editingPlan && (
+            <div className="border-t border-gray-100 dark:border-gray-700 pt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const persoana = persoane.find(p => String(p.id) === String(form.persoana_id));
+                  navigate('/procese-verbale', {
+                    state: {
+                      fromPlan: {
+                        utilaj_id: form.utilaj_id,
+                        lucrare_id: form.lucrare_id,
+                        data_predare: form.data_start,
+                        responsabil_predare: persoana?.nume || '',
+                      }
+                    }
+                  });
+                }}
+                className="w-full py-2 rounded-lg text-sm font-medium border border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+              >
+                📋 Creeaza Proces Verbal pentru aceasta planificare
+              </button>
+            </div>
+          )}
         </form>
       </Modal>
 

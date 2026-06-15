@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../App';
 import Modal from '../components/Modal';
@@ -8,6 +9,7 @@ import SignaturePad from '../components/SignaturePad';
 
 export default function ProceseVerbale() {
   const toast = useToast();
+  const location = useLocation();
   const [pvp, setPvp] = useState([]);
   const [utilaje, setUtilaje] = useState([]);
   const [lucrari, setLucrari] = useState([]);
@@ -56,6 +58,27 @@ export default function ProceseVerbale() {
   };
 
   useEffect(() => { load(); }, [filterStatus, filterUtilaj]);
+
+  useEffect(() => {
+    const fromPlan = location.state?.fromPlan;
+    if (!fromPlan || loading) return;
+    setEditing(null);
+    setTab('predare');
+    setPvPoze([]);
+    setPendingPoze([]);
+    setPvAccesorii([]);
+    setSemnaturaPredare('');
+    setSemnaturaPrimire('');
+    setFormPredare(f => ({
+      ...f,
+      utilaj_id: String(fromPlan.utilaj_id || ''),
+      lucrare_id: String(fromPlan.lucrare_id || ''),
+      data_predare: fromPlan.data_predare || new Date().toISOString().slice(0, 10),
+      responsabil_predare: fromPlan.responsabil_predare || '',
+    }));
+    setModalOpen(true);
+    window.history.replaceState({}, '');
+  }, [location.state, loading]);
 
   // Load accesorii when utilaj changes (for new PV)
   useEffect(() => {
@@ -147,6 +170,10 @@ export default function ProceseVerbale() {
   const handleSavePrimire = async (e) => {
     e.preventDefault();
     if (!editing) return;
+    if (editing.data_predare && formPrimire.data_primire < editing.data_predare) {
+      toast(`Data primirii nu poate fi anterioara datei de predare (${editing.data_predare})`, 'error');
+      return;
+    }
     try {
       await api.patch(`/pvp/${editing.id}/primire`, {
         ...formPrimire,
@@ -291,6 +318,13 @@ export default function ProceseVerbale() {
                         <button onClick={() => openEdit(pv)} className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-gray-600 dark:text-gray-300 whitespace-nowrap">
                           {pv.status === 'deschis' ? 'Inchide' : 'Detalii'}
                         </button>
+                        <button
+                          onClick={() => window.open(`/procese-verbale/${pv.id}/print`, '_blank')}
+                          className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 rounded text-blue-600 dark:text-blue-400 whitespace-nowrap"
+                          title="Printeaza / Vizualizeaza A4"
+                        >
+                          🖨️
+                        </button>
                         <button onClick={() => handleDelete(pv.id)} className="text-xs px-2 py-1 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 rounded text-red-600 dark:text-red-400">✕</button>
                       </div>
                     </td>
@@ -331,6 +365,11 @@ export default function ProceseVerbale() {
                   <option value="">-- Selecteaza --</option>
                   {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
                 </select>
+                {!editing && formPredare.utilaj_id && pvp.some(p => String(p.utilaj_id) === String(formPredare.utilaj_id) && p.status === 'deschis') && (
+                  <p className="mt-1.5 text-xs text-red-600 dark:text-red-400 font-medium">
+                    Acest utilaj are deja un PV deschis. Inchide-l inainte de a crea unul nou.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lucrare</label>
@@ -448,7 +487,7 @@ export default function ProceseVerbale() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data primire *</label>
-                <input type="date" required value={formPrimire.data_primire} onChange={e => setFormPrimire(f => ({...f, data_primire: e.target.value}))} className={inputCls} disabled={isReadOnly} />
+                <input type="date" required min={editing?.data_predare || undefined} value={formPrimire.data_primire} onChange={e => setFormPrimire(f => ({...f, data_primire: e.target.value}))} className={inputCls} disabled={isReadOnly} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Responsabil primire</label>

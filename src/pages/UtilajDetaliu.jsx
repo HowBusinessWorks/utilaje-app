@@ -551,10 +551,10 @@ export default function UtilajDetaliu() {
         <div className="space-y-4">
           <UploadZone onUpload={handleUploadPoza} label="Adauga poze utilaj" />
           {utilaj.poze && utilaj.poze.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {utilaj.poze.map(poza => (
                 <div key={poza.id} className="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
-                  <img src={poza.url} alt="Poza utilaj" className="w-full h-32 object-cover" />
+                  <img src={poza.url} alt="Poza utilaj" className="w-full h-auto" />
                   {poza.is_primary === 1 && (
                     <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-0.5 rounded">Principal</span>
                   )}

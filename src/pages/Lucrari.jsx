@@ -32,6 +32,10 @@ function LucrariTab({ toast }) {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (form.data_start && form.data_sfarsit && form.data_sfarsit < form.data_start) {
+      toast(`Data finalizarii nu poate fi anterioara datei de start (${form.data_start})`, 'error');
+      return;
+    }
     try {
       if (editing) { await api.put(`/lucrari/${editing.id}`, form); toast('Lucrare actualizata!'); }
       else { await api.post('/lucrari', form); toast('Lucrare adaugata!'); }
@@ -112,7 +116,7 @@ function LucrariTab({ toast }) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data sfarsit</label>
-              <input type="date" value={form.data_sfarsit} onChange={e => setForm(f => ({...f, data_sfarsit: e.target.value}))} className={inputCls} />
+              <input type="date" min={form.data_start || undefined} value={form.data_sfarsit} onChange={e => setForm(f => ({...f, data_sfarsit: e.target.value}))} className={inputCls} />
             </div>
           </div>
           <div>
