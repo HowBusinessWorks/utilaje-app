@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useToast } from '../App';
+import { IconWarning } from '../components/icons';
 
 const statusColors = {
   disponibil: '#22c55e',
@@ -96,12 +97,13 @@ export default function Harta() {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+    <div className="space-y-4">
+      <div className="card h-12 animate-pulse" />
+      <div className="card animate-pulse" style={{ height: 'calc(100vh - 220px)' }} />
     </div>
   );
 
-  if (!MapComponents) return <div className="text-gray-500 p-4">Se incarca harta...</div>;
+  if (!MapComponents) return <div className="p-4 text-ink-500">Se incarca harta...</div>;
 
   const { MapContainer, TileLayer, Marker, Popup } = MapComponents;
   const L = MapComponents.L;
@@ -123,16 +125,16 @@ export default function Harta() {
     <div className="space-y-4 h-full">
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <h3 className="text-sm font-medium text-ink-700 dark:text-ink-300">
             {markers.length} utilaje pozitionate
           </h3>
           {nrPeLucrare > 0 && (
-            <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 px-2 py-0.5 rounded-full">
               {nrPeLucrare} pe lucrare
             </span>
           )}
           {nrLaBaza > 0 && (
-            <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-ink-100 dark:bg-ink-700 text-ink-600 dark:text-ink-400 px-2 py-0.5 rounded-full">
               {nrLaBaza} la baza
             </span>
           )}
@@ -141,17 +143,17 @@ export default function Harta() {
           {Object.entries(statusLabels).map(([status, label]) => (
             <div key={status} className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: statusColors[status] }}></div>
-              <span className="text-xs text-gray-600 dark:text-gray-400">{label}</span>
+              <span className="text-xs text-ink-600 dark:text-ink-400">{label}</span>
             </div>
           ))}
-          <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-gray-200 dark:border-gray-600">
+          <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-ink-200 dark:border-ink-600">
             <div className="w-3 h-3 rounded-full bg-indigo-500 opacity-70 border border-white"></div>
-            <span className="text-xs text-gray-600 dark:text-gray-400">Locatie/santier</span>
+            <span className="text-xs text-ink-600 dark:text-ink-400">Locatie/santier</span>
           </div>
         </div>
       </div>
 
-      <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700" style={{ height: 'calc(100vh - 220px)' }}>
+      <div className="card overflow-hidden" style={{ height: 'calc(100vh - 220px)' }}>
         <MapContainer center={center} zoom={12} style={{ height: '100%', width: '100%' }}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -162,7 +164,7 @@ export default function Harta() {
           {markers.map(({ utilaj, loc, sursa, lucrare, avertisment }) => {
             const color = statusColors[utilaj.status] || '#9ca3af';
             // Utilajele pe lucrare au contur albastru, cele la baza au contur alb
-            const borderColor = sursa === 'lucrare' ? '#3b82f6' : 'white';
+            const borderColor = sursa === 'lucrare' ? '#2450e8' : 'white';
             const icon = L.divIcon({
               html: `<div style="width:28px;height:28px;background:${color};border:3px solid ${borderColor};border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:2px 2px 6px rgba(0,0,0,0.3)"></div>`,
               className: '',
@@ -174,7 +176,7 @@ export default function Harta() {
                 <Popup>
                   <div className="min-w-44">
                     <p className="font-semibold text-sm">{utilaj.denumire}</p>
-                    {utilaj.alias && <p className="text-xs text-gray-500">{utilaj.alias}</p>}
+                    {utilaj.alias && <p className="text-xs text-ink-500">{utilaj.alias}</p>}
                     <div className="mt-2 space-y-1">
                       <p className="text-xs">
                         <span className="font-medium">Status:</span>{' '}
@@ -185,7 +187,7 @@ export default function Harta() {
                       <p className="text-xs">
                         <span className="font-medium">Locatie:</span> {loc.nume}
                         {sursa === 'lucrare' && (
-                          <span className="ml-1 text-blue-600 font-medium">(activ pe lucrare)</span>
+                          <span className="ml-1 text-brand-600 font-medium">(activ pe lucrare)</span>
                         )}
                       </p>
                       {lucrare && (
@@ -195,7 +197,7 @@ export default function Harta() {
                         <p className="text-xs"><span className="font-medium">Responsabil:</span> {utilaj.responsabil_nume}</p>
                       )}
                       {avertisment && (
-                        <p className="text-xs text-amber-600 mt-1">⚠ {avertisment}</p>
+                        <p className="mt-1 flex items-center gap-1 text-xs text-amber-600"><IconWarning size={13} weight="fill" /> {avertisment}</p>
                       )}
                     </div>
                   </div>
@@ -217,7 +219,7 @@ export default function Harta() {
                 <Popup>
                   <div>
                     <p className="font-semibold text-sm">{loc.nume}</p>
-                    {loc.adresa && <p className="text-xs text-gray-500">{loc.adresa}</p>}
+                    {loc.adresa && <p className="text-xs text-ink-500">{loc.adresa}</p>}
                     <p className="text-xs text-indigo-600 capitalize mt-1">{loc.tip}</p>
                   </div>
                 </Popup>
@@ -228,7 +230,7 @@ export default function Harta() {
       </div>
 
       {markers.length === 0 && (
-        <div className="text-center text-gray-400 text-sm py-4">
+        <div className="text-center text-ink-400 text-sm py-4">
           Niciun utilaj nu are locatie configurata. Adauga locatie baza pentru fiecare utilaj.
         </div>
       )}

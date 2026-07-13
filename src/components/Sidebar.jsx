@@ -1,36 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { api } from '../api';
+import {
+  IconDashboard, IconUtilaj, IconFuel, IconRepair, IconCalendar,
+  IconClipboard, IconWork, IconMap, IconPeople, IconReports, IconClose, IconCheck,
+} from './icons';
 
 const navGroups = [
   {
     label: null,
     items: [
-      { to: '/dashboard', label: 'Dashboard', icon: '📊' },
+      { to: '/dashboard', label: 'Dashboard', Icon: IconDashboard },
     ],
   },
   {
     label: 'Utilaje',
     items: [
-      { to: '/utilaje', label: 'Utilaje', icon: '🚜' },
-      { to: '/motorina', label: 'Motorina', icon: '⛽' },
-      { to: '/reparatii', label: 'Reparatii', icon: '🔧' },
-      { to: '/planificare', label: 'Planificari', icon: '📅' },
-      { to: '/procese-verbale', label: 'Procese Verbale', icon: '📋' },
+      { to: '/utilaje', label: 'Utilaje', Icon: IconUtilaj },
+      { to: '/motorina', label: 'Motorina', Icon: IconFuel },
+      { to: '/reparatii', label: 'Reparatii', Icon: IconRepair },
+      { to: '/planificare', label: 'Planificari', Icon: IconCalendar },
+      { to: '/procese-verbale', label: 'Procese verbale', Icon: IconClipboard },
     ],
   },
   {
     label: 'Operatiuni',
     items: [
-      { to: '/lucrari', label: 'Lucrari', icon: '🏗️' },
-      { to: '/harta', label: 'Harta', icon: '🗺️' },
+      { to: '/lucrari', label: 'Lucrari', Icon: IconWork },
+      { to: '/harta', label: 'Harta', Icon: IconMap },
     ],
   },
   {
     label: 'Resurse',
     items: [
-      { to: '/persoane', label: 'Persoane', icon: '👥' },
-      { to: '/rapoarte', label: 'Rapoarte', icon: '📈' },
+      { to: '/persoane', label: 'Persoane', Icon: IconPeople },
+      { to: '/rapoarte', label: 'Rapoarte', Icon: IconReports },
     ],
   },
 ];
@@ -40,7 +44,6 @@ function PretMotorina() {
   const [pret, setPret] = useState('');
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
-  const inputRef = useRef(null);
 
   useEffect(() => {
     api.get('/preturi-motorina/today')
@@ -60,31 +63,29 @@ function PretMotorina() {
   };
 
   return (
-    <div className="mt-2">
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Pret motorina azi</p>
+    <div className="rounded-xl border border-ink-200/80 bg-ink-50/60 p-3 dark:border-ink-800 dark:bg-ink-950/40">
+      <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-400">Pret motorina azi</p>
       <div className="flex items-center gap-1.5">
-        <input
-          ref={inputRef}
-          type="number"
-          step="0.01"
-          min="0"
-          value={pret}
-          onChange={e => { setPret(e.target.value); setSaved(false); }}
-          onKeyDown={e => e.key === 'Enter' && handleSave()}
-          placeholder="0.00"
-          className="w-20 min-w-0 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs bg-white dark:bg-gray-700 dark:text-white focus:ring-1 focus:ring-blue-500 outline-none"
-        />
-        <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">RON/L</span>
+        <div className="flex flex-1 items-center rounded-lg border border-ink-200 bg-white px-2 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/15 dark:border-ink-700 dark:bg-ink-900">
+          <input
+            type="number" step="0.01" min="0" value={pret}
+            onChange={e => { setPret(e.target.value); setSaved(false); }}
+            onKeyDown={e => e.key === 'Enter' && handleSave()}
+            placeholder="0.00"
+            className="w-full min-w-0 bg-transparent py-1.5 text-sm tabular text-ink-900 outline-none dark:text-ink-50"
+          />
+          <span className="shrink-0 text-[11px] text-ink-400">RON/L</span>
+        </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          className={`shrink-0 flex-1 px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
+          className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors ${
             saved
-              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
+              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+              : 'bg-brand-600 text-white hover:bg-brand-700'
           }`}
         >
-          {saved ? '✓ Salvat' : saving ? '…' : 'Salveaza'}
+          {saved ? <IconCheck size={15} weight="bold" /> : saving ? '…' : 'Salveaza'}
         </button>
       </div>
     </div>
@@ -94,56 +95,70 @@ function PretMotorina() {
 export default function Sidebar({ open, onClose }) {
   return (
     <aside
-      className="-translate-x-full fixed inset-y-0 left-0 z-30 flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-transform duration-200 lg:relative lg:inset-auto lg:translate-x-0 lg:w-60 lg:shrink-0"
+      className="fixed inset-y-0 left-0 z-30 flex w-[260px] -translate-x-full flex-col border-r border-ink-200/80 bg-white transition-transform duration-200 dark:border-ink-800 dark:bg-ink-950 lg:relative lg:inset-auto lg:w-[260px] lg:translate-x-0 lg:shrink-0"
       style={open ? { transform: 'translateX(0)' } : undefined}
     >
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-base text-gray-900 dark:text-white">Gestiune Utilaje</h1>
-            <PretMotorina />
+      <div className="flex items-start justify-between gap-2 px-5 pb-4 pt-5">
+        <div className="flex items-center gap-2.5">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-600 text-white shadow-sm">
+            <IconUtilaj size={20} weight="fill" />
           </div>
-          <button
-            onClick={onClose}
-            className="lg:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0 mt-0.5"
-            aria-label="Inchide meniu"
-          >
-            ✕
-          </button>
+          <div className="leading-tight">
+            <h1 className="text-[15px] font-semibold text-ink-900 dark:text-white">Gestiune</h1>
+            <p className="text-[11px] font-medium text-ink-400">Utilaje &amp; teren</p>
+          </div>
         </div>
+        <button
+          onClick={onClose}
+          className="rounded-lg p-1.5 text-ink-400 hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800 lg:hidden"
+          aria-label="Inchide meniu"
+        >
+          <IconClose size={18} />
+        </button>
       </div>
-      <nav className="flex-1 p-3 overflow-y-auto space-y-4">
+
+      <div className="px-3 pb-3">
+        <PretMotorina />
+      </div>
+
+      <nav className="scroll-area flex-1 space-y-5 overflow-y-auto px-3 py-2">
         {navGroups.map((group, gi) => (
           <div key={gi}>
             {group.label && (
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 mb-1">
+              <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-ink-400">
                 {group.label}
               </p>
             )}
             <div className="space-y-0.5">
-              {group.items.map(item => (
+              {group.items.map(({ to, label, Icon }) => (
                 <NavLink
-                  key={item.to}
-                  to={item.to}
+                  key={to}
+                  to={to}
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    `group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/12 dark:text-brand-300'
+                        : 'text-ink-500 hover:bg-ink-100 hover:text-ink-800 dark:text-ink-400 dark:hover:bg-ink-800/60 dark:hover:text-ink-100'
                     }`
                   }
                 >
-                  <span>{item.icon}</span>
-                  <span>{item.label}</span>
+                  {({ isActive }) => (
+                    <>
+                      {isActive && <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand-600" />}
+                      <Icon size={19} weight={isActive ? 'fill' : 'regular'} className="shrink-0" />
+                      <span>{label}</span>
+                    </>
+                  )}
                 </NavLink>
               ))}
             </div>
           </div>
         ))}
       </nav>
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <p className="text-xs text-gray-400 dark:text-gray-500">Gestiune Utilaje v1.0</p>
+
+      <div className="border-t border-ink-200/70 px-5 py-3.5 dark:border-ink-800">
+        <p className="text-[11px] text-ink-400">Gestiune Utilaje · v1.0</p>
       </div>
     </aside>
   );

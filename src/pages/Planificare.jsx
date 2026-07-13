@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../App';
 import Modal from '../components/Modal';
+import Select from '../components/Select';
+import { IconArrowLeft, IconArrowRight, IconSort, IconClipboard } from '../components/icons';
 
 // Formatare dată folosind ora LOCALĂ (nu UTC) — fix pentru timezone UTC+2/+3
 function toDateStr(d) {
@@ -279,86 +281,79 @@ export default function Planificare() {
     ? `${new Date(windowStart + 'T00:00:00').toLocaleDateString('ro-RO', { month: 'short', year: 'numeric' })} — ${new Date(addMonths(windowStart, 2) + 'T00:00:00').toLocaleDateString('ro-RO', { month: 'short', year: 'numeric' })}`
     : `${windowStart} — ${windowEnd}`;
 
-  const inputCls = "w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none";
+  const inputCls = "field";
 
   return (
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
-        <button onClick={goToday}
-          className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
-          Azi
-        </button>
-        <button onClick={navPrev}
-          className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300">
-          ‹
-        </button>
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-48 text-center capitalize">
+        <button onClick={goToday} className="btn-primary h-[38px]">Azi</button>
+        <div className="flex items-center gap-1">
+          <button onClick={navPrev} className="grid h-[38px] w-[38px] place-items-center rounded-lg border border-ink-200 text-ink-600 transition-colors hover:bg-ink-100 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800" aria-label="Anterior">
+            <IconArrowLeft size={16} weight="bold" />
+          </button>
+          <button onClick={navNext} className="grid h-[38px] w-[38px] place-items-center rounded-lg border border-ink-200 text-ink-600 transition-colors hover:bg-ink-100 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800" aria-label="Urmator">
+            <IconArrowRight size={16} weight="bold" />
+          </button>
+        </div>
+        <span className="min-w-48 text-center text-sm font-medium capitalize text-ink-700 dark:text-ink-300">
           {windowLabel}
         </span>
-        <button onClick={navNext}
-          className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300">
-          ›
-        </button>
 
-        <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden ml-1">
+        <div className="ml-1 flex overflow-hidden rounded-lg border border-ink-200 p-0.5 dark:border-ink-700">
           {[['week', 'Săpt.'], ['2weeks', '2 Săpt.'], ['month', 'Lună'], ['3months', '3 Luni']].map(([mode, label]) => (
             <button key={mode} onClick={() => switchView(mode)}
-              className={`px-3 py-2 text-sm transition-colors border-r border-gray-300 dark:border-gray-600 last:border-r-0 ${
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                 viewMode === mode
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-brand-600 text-white shadow-xs'
+                  : 'text-ink-600 hover:bg-ink-100 dark:text-ink-300 dark:hover:bg-ink-800'
               }`}>
               {label}
             </button>
           ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-2 flex-wrap">
-          <select value={filterUtilaj} onChange={e => setFilterUtilaj(e.target.value)}
-            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
-            <option value="">Toate utilajele</option>
-            {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
-          </select>
-          <select value={filterCategorie} onChange={e => setFilterCategorie(e.target.value)}
-            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
-            <option value="">Toate categoriile</option>
-            {categorii.map(c => <option key={c.id} value={c.id}>{c.nume}</option>)}
-          </select>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="w-44">
+            <Select value={filterUtilaj} onChange={setFilterUtilaj} placeholder="Toate utilajele"
+              options={[{ value: '', label: 'Toate utilajele' }, ...utilaje.map(u => ({ value: String(u.id), label: u.denumire }))]} />
+          </div>
+          <div className="w-44">
+            <Select value={filterCategorie} onChange={setFilterCategorie} placeholder="Toate categoriile"
+              options={[{ value: '', label: 'Toate categoriile' }, ...categorii.map(c => ({ value: String(c.id), label: c.nume }))]} />
+          </div>
           <button onClick={() => { setDecalareForm({ zile: '', data_referinta: today, selectedUtilaje: [] }); setDecalareOpen(true); }}
-            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-1">
-            ↕ Decalare
+            className="btn-ghost">
+            <IconSort size={16} /> Decalare
           </button>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-40">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        </div>
+        <div className="card h-96 animate-pulse" />
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden select-none">
-          <div className="overflow-x-auto">
+        <div className="card select-none overflow-hidden">
+          <div className="scroll-area overflow-x-auto">
             <div style={{ minWidth: 200 + days.length * DAY_WIDTH }}>
               {/* Header */}
-              <div className="bg-gray-50 dark:bg-gray-700/50 sticky top-0 z-10">
+              <div className="bg-ink-50 dark:bg-ink-700/50 sticky top-0 z-10">
                 {/* Banda luni — doar pentru view 3 luni */}
                 {viewMode === '3months' && (
-                  <div className="flex border-b border-gray-200 dark:border-gray-700">
-                    <div style={{ width: 200, minWidth: 200 }} className="border-r border-gray-200 dark:border-gray-600" />
+                  <div className="flex border-b border-ink-200 dark:border-ink-700">
+                    <div style={{ width: 200, minWidth: 200 }} className="border-r border-ink-200 dark:border-ink-600" />
                     <div className="flex">
                       {monthBands.map(band => (
                         <div key={band.key} style={{ width: band.days.length * DAY_WIDTH }}
-                          className="text-xs font-semibold text-gray-600 dark:text-gray-300 text-center py-1 border-r border-gray-200 dark:border-gray-600 capitalize truncate px-1">
+                          className="text-xs font-semibold text-ink-600 dark:text-ink-300 text-center py-1 border-r border-ink-200 dark:border-ink-600 capitalize truncate px-1">
                           {band.label}
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-                <div className="flex border-b border-gray-200 dark:border-gray-700">
+                <div className="flex border-b border-ink-200 dark:border-ink-700">
                   <div style={{ width: 200, minWidth: 200 }}
-                    className="px-4 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600">
+                    className="px-4 py-2 text-xs font-medium text-ink-600 dark:text-ink-300 border-r border-ink-200 dark:border-ink-600">
                     Utilaj
                   </div>
                   <div className="flex">
@@ -369,25 +364,25 @@ export default function Planificare() {
                       const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                       return (
                         <div key={day} style={{ width: DAY_WIDTH }}
-                          className={`border-r border-gray-100 dark:border-gray-700 text-center py-1 ${
-                            isToday ? 'bg-blue-100 dark:bg-blue-900/40' : isWeekend ? 'bg-gray-100 dark:bg-gray-700/60' : ''
+                          className={`border-r border-ink-100 dark:border-ink-700 text-center py-1 ${
+                            isToday ? 'bg-brand-100 dark:bg-brand-900/40' : isWeekend ? 'bg-ink-100 dark:bg-ink-700/60' : ''
                           }`}>
                           {viewMode === '3months'
-                            ? <p className={`font-semibold leading-none ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`} style={{ fontSize: 9 }}>
+                            ? <p className={`font-semibold leading-none ${isToday ? 'text-brand-600 dark:text-brand-400' : 'text-ink-600 dark:text-ink-400'}`} style={{ fontSize: 9 }}>
                                 {day.slice(8)}
                               </p>
                             : viewMode !== 'month'
                             ? <>
-                                <p className="text-xs text-gray-400 dark:text-gray-500 leading-none">{dayName}</p>
-                                <p className={`text-xs font-semibold mt-0.5 ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                                <p className="text-xs text-ink-400 dark:text-ink-500 leading-none">{dayName}</p>
+                                <p className={`text-xs font-semibold mt-0.5 ${isToday ? 'text-brand-600 dark:text-brand-400' : 'text-ink-700 dark:text-ink-300'}`}>
                                   {day.slice(8)}
                                 </p>
                               </>
                             : <>
-                                <p className={`text-xs font-semibold leading-none ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                                <p className={`text-xs font-semibold leading-none ${isToday ? 'text-brand-600 dark:text-brand-400' : 'text-ink-700 dark:text-ink-300'}`}>
                                   {day.slice(8)}
                                 </p>
-                                <p className="text-gray-400 dark:text-gray-500 leading-none mt-0.5" style={{ fontSize: 9 }}>{dayName}</p>
+                                <p className="text-ink-400 dark:text-ink-500 leading-none mt-0.5" style={{ fontSize: 9 }}>{dayName}</p>
                               </>
                           }
                         </div>
@@ -404,13 +399,13 @@ export default function Planificare() {
                   p.data_start <= windowEnd && p.data_sfarsit >= windowStart
                 );
                 return (
-                  <div key={utilaj.id} className="flex border-b border-gray-100 dark:border-gray-700" style={{ height: ROW_HEIGHT }}>
+                  <div key={utilaj.id} className="flex border-b border-ink-100 dark:border-ink-700" style={{ height: ROW_HEIGHT }}>
                     <div style={{ width: 200, minWidth: 200 }}
-                      className="px-4 flex items-center gap-2 border-r border-gray-200 dark:border-gray-600 shrink-0 bg-white dark:bg-gray-800">
+                      className="px-4 flex items-center gap-2 border-r border-ink-200 dark:border-ink-600 shrink-0 bg-white dark:bg-ink-800">
                       {utilaj.categorie_culoare && (
                         <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: utilaj.categorie_culoare }} />
                       )}
-                      <p className="text-xs font-medium text-gray-900 dark:text-white leading-tight break-words min-w-0">{utilaj.denumire}</p>
+                      <p className="text-xs font-medium text-ink-900 dark:text-white leading-tight break-words min-w-0">{utilaj.denumire}</p>
                     </div>
                     {/* Gantt area */}
                     <div className="relative flex" style={{ width: days.length * DAY_WIDTH }}>
@@ -421,12 +416,12 @@ export default function Planificare() {
                         const highlighted = isDragHighlighted(utilaj.id, day);
                         return (
                           <div key={day} style={{ width: DAY_WIDTH }}
-                            className={`h-full border-r border-gray-100 dark:border-gray-700 cursor-crosshair ${
+                            className={`h-full border-r border-ink-100 dark:border-ink-700 cursor-crosshair ${
                               highlighted
-                                ? 'bg-blue-100 dark:bg-blue-900/30'
-                                : isToday ? 'bg-blue-50/40 dark:bg-blue-900/10'
-                                : isWeekend ? 'bg-gray-50 dark:bg-gray-700/30'
-                                : 'hover:bg-gray-50/60 dark:hover:bg-gray-700/20'
+                                ? 'bg-brand-100 dark:bg-brand-900/30'
+                                : isToday ? 'bg-brand-50/40 dark:bg-brand-900/10'
+                                : isWeekend ? 'bg-ink-50 dark:bg-ink-700/30'
+                                : 'hover:bg-ink-50/60 dark:hover:bg-ink-700/20'
                             }`}
                             onMouseDown={(e) => {
                               e.preventDefault();
@@ -448,7 +443,7 @@ export default function Planificare() {
                       {myPlans.map(plan => {
                         const style = getBarStyle(plan);
                         if (!style) return null;
-                        const color = plan.categorie_culoare || '#3b82f6';
+                        const color = plan.categorie_culoare || '#2450e8';
                         return (
                           <div key={plan.id}
                             onMouseDown={(e) => e.stopPropagation()}
@@ -505,8 +500,8 @@ export default function Planificare() {
                             left: sIdx * DAY_WIDTH + 1,
                             width: (eIdx - sIdx + 1) * DAY_WIDTH - 6,
                             top: 7, height: ROW_HEIGHT - 14,
-                            backgroundColor: '#3b82f630',
-                            border: '2px dashed #3b82f6',
+                            backgroundColor: '#2450e830',
+                            border: '2px dashed #2450e8',
                             borderRadius: 6, zIndex: 3, pointerEvents: 'none',
                           }} />
                         );
@@ -516,7 +511,7 @@ export default function Planificare() {
                 );
               })}
               {filteredUtilaje.length === 0 && (
-                <div className="py-8 text-center text-gray-400 text-sm">Niciun utilaj</div>
+                <div className="py-8 text-center text-ink-400 text-sm">Niciun utilaj</div>
               )}
             </div>
           </div>
@@ -528,58 +523,52 @@ export default function Planificare() {
         <form onSubmit={handleSave} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Utilaj *</label>
-              <select required value={form.utilaj_id} onChange={e => setForm(f => ({ ...f, utilaj_id: e.target.value }))} className={inputCls}>
-                <option value="">-- Selecteaza --</option>
-                {utilaje.map(u => <option key={u.id} value={u.id}>{u.denumire}</option>)}
-              </select>
+              <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Utilaj *</label>
+              <Select value={form.utilaj_id} onChange={v => setForm(f => ({ ...f, utilaj_id: v }))} placeholder="Selecteaza utilaj"
+                options={utilaje.map(u => ({ value: String(u.id), label: u.denumire }))} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data start *</label>
+              <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Data start *</label>
               <input type="date" required value={form.data_start} onChange={e => setForm(f => ({ ...f, data_start: e.target.value }))} className={inputCls} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data sfarsit *</label>
+              <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Data sfarsit *</label>
               <input type="date" required value={form.data_sfarsit} onChange={e => setForm(f => ({ ...f, data_sfarsit: e.target.value }))} className={inputCls} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lucrare</label>
-              <select value={form.lucrare_id} onChange={e => setForm(f => ({ ...f, lucrare_id: e.target.value }))} className={inputCls}>
-                <option value="">-- Fara lucrare --</option>
-                {lucrari.map(l => <option key={l.id} value={l.id}>{l.nume}</option>)}
-              </select>
+              <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Lucrare</label>
+              <Select value={form.lucrare_id} onChange={v => setForm(f => ({ ...f, lucrare_id: v }))} placeholder="Fara lucrare"
+                options={[{ value: '', label: 'Fara lucrare' }, ...lucrari.map(l => ({ value: String(l.id), label: l.nume }))]} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Persoana</label>
-              <select value={form.persoana_id} onChange={e => setForm(f => ({ ...f, persoana_id: e.target.value }))} className={inputCls}>
-                <option value="">-- Selecteaza --</option>
-                {persoane.map(p => <option key={p.id} value={p.id}>{p.nume}</option>)}
-              </select>
+              <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Persoana</label>
+              <Select value={form.persoana_id} onChange={v => setForm(f => ({ ...f, persoana_id: v }))} placeholder="Selecteaza persoana"
+                options={persoane.map(p => ({ value: String(p.id), label: p.nume }))} />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observatii</label>
+              <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Observatii</label>
               <input value={form.observatii} onChange={e => setForm(f => ({ ...f, observatii: e.target.value }))} className={inputCls} />
             </div>
           </div>
 
           {/* Decalaj rapid — doar la editare */}
           {editingPlan && (
-            <div className="border-t border-gray-100 dark:border-gray-700 pt-3">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Decaleaza planificarea cu</p>
+            <div className="border-t border-ink-100 dark:border-ink-700 pt-3">
+              <p className="text-xs font-medium text-ink-500 dark:text-ink-400 mb-2">Decaleaza planificarea cu</p>
               <div className="flex items-center gap-2 flex-wrap">
                 {[-7, -1, 1, 7].map(n => (
                   <button key={n} type="button"
                     onClick={() => setForm(f => ({ ...f, data_start: addDays(f.data_start, n), data_sfarsit: addDays(f.data_sfarsit, n) }))}
-                    className="px-2.5 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-mono transition-colors">
+                    className="px-2.5 py-1 text-xs border border-ink-300 dark:border-ink-600 rounded-md hover:bg-ink-100 dark:hover:bg-ink-700 text-ink-700 dark:text-ink-300 font-mono transition-colors">
                     {n > 0 ? `+${n}z` : `${n}z`}
                   </button>
                 ))}
                 <div className="flex items-center gap-1 ml-1">
                   <input type="number" value={shiftDays} onChange={e => setShiftDays(e.target.value)}
                     placeholder="±zile"
-                    className="w-16 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-xs bg-white dark:bg-gray-700 dark:text-white outline-none focus:ring-1 focus:ring-blue-500" />
+                    className="w-16 border border-ink-300 dark:border-ink-600 rounded-md px-2 py-1 text-xs bg-white dark:bg-ink-700 dark:text-white outline-none focus:ring-1 focus:ring-brand-500" />
                   <button type="button" onClick={applyShift}
-                    className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors">
+                    className="px-2 py-1 text-xs bg-ink-100 dark:bg-ink-700 rounded-md hover:bg-ink-200 dark:hover:bg-ink-600 text-ink-700 dark:text-ink-300 transition-colors">
                     Aplica
                   </button>
                 </div>
@@ -588,7 +577,7 @@ export default function Planificare() {
           )}
 
           <div className="flex gap-3 pt-1">
-            <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium transition-colors">
+            <button type="submit" className="flex-1 bg-brand-600 hover:bg-brand-700 text-white py-2 rounded-lg text-sm font-medium transition-colors">
               {editingPlan ? 'Actualizeaza' : 'Adauga'}
             </button>
             {editingPlan && (
@@ -598,13 +587,13 @@ export default function Planificare() {
               </button>
             )}
             <button type="button" onClick={() => setModalOpen(false)}
-              className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm font-medium transition-colors">
+              className="flex-1 bg-ink-100 dark:bg-ink-700 hover:bg-ink-200 dark:hover:bg-ink-600 text-ink-700 dark:text-ink-300 py-2 rounded-lg text-sm font-medium transition-colors">
               Anuleaza
             </button>
           </div>
 
           {editingPlan && (
-            <div className="border-t border-gray-100 dark:border-gray-700 pt-3">
+            <div className="border-t border-ink-100 dark:border-ink-700 pt-3">
               <button
                 type="button"
                 onClick={() => {
@@ -620,9 +609,9 @@ export default function Planificare() {
                     }
                   });
                 }}
-                className="w-full py-2 rounded-lg text-sm font-medium border border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-brand-300 py-2 text-sm font-medium text-brand-600 transition-colors hover:bg-brand-50 dark:border-brand-700 dark:text-brand-400 dark:hover:bg-brand-900/20"
               >
-                📋 Creeaza Proces Verbal pentru aceasta planificare
+                <IconClipboard size={16} /> Creeaza proces verbal pentru aceasta planificare
               </button>
             </div>
           )}
@@ -633,15 +622,15 @@ export default function Planificare() {
       <Modal isOpen={decalareOpen} onClose={() => setDecalareOpen(false)} title="Decalare planificari in masa">
         <form onSubmit={handleDecalare} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Numar de zile <span className="text-gray-400 font-normal">(pozitiv = inainte, negativ = inapoi)</span>
+            <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">
+              Numar de zile <span className="text-ink-400 font-normal">(pozitiv = inainte, negativ = inapoi)</span>
             </label>
             <input type="number" required value={decalareForm.zile}
               onChange={e => setDecalareForm(f => ({ ...f, zile: e.target.value }))}
               className={inputCls} placeholder="ex: 7 sau -3" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">
               Decaleaza planificarile cu data start dupa
             </label>
             <input type="date" required value={decalareForm.data_referinta}
@@ -649,20 +638,20 @@ export default function Planificare() {
               className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Utilaje <span className="text-gray-400 font-normal">(implicit toate)</span>
+            <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-2">
+              Utilaje <span className="text-ink-400 font-normal">(implicit toate)</span>
             </label>
-            <div className="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
-              <label className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer">
+            <div className="max-h-48 overflow-y-auto border border-ink-200 dark:border-ink-600 rounded-lg divide-y divide-ink-100 dark:divide-ink-700">
+              <label className="flex items-center gap-2 px-3 py-2 hover:bg-ink-50 dark:hover:bg-ink-700/50 cursor-pointer">
                 <input type="checkbox"
                   checked={decalareForm.selectedUtilaje.length === 0}
                   onChange={() => setDecalareForm(f => ({ ...f, selectedUtilaje: [] }))}
-                  className="rounded accent-blue-600"
+                  className="rounded accent-brand-600"
                 />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Toate utilajele</span>
+                <span className="text-sm font-medium text-ink-700 dark:text-ink-300">Toate utilajele</span>
               </label>
               {utilaje.map(u => (
-                <label key={u.id} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer">
+                <label key={u.id} className="flex items-center gap-2 px-3 py-2 hover:bg-ink-50 dark:hover:bg-ink-700/50 cursor-pointer">
                   <input type="checkbox"
                     checked={decalareForm.selectedUtilaje.includes(u.id)}
                     onChange={(e) => setDecalareForm(f => ({
@@ -671,19 +660,19 @@ export default function Planificare() {
                         ? [...f.selectedUtilaje, u.id]
                         : f.selectedUtilaje.filter(id => id !== u.id),
                     }))}
-                    className="rounded accent-blue-600"
+                    className="rounded accent-brand-600"
                   />
-                  <span className="text-sm text-gray-600 dark:text-gray-300">{u.denumire}</span>
+                  <span className="text-sm text-ink-600 dark:text-ink-300">{u.denumire}</span>
                 </label>
               ))}
             </div>
           </div>
           <div className="flex gap-3">
-            <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium transition-colors">
+            <button type="submit" className="flex-1 bg-brand-600 hover:bg-brand-700 text-white py-2 rounded-lg text-sm font-medium transition-colors">
               Aplica decalare
             </button>
             <button type="button" onClick={() => setDecalareOpen(false)}
-              className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm font-medium transition-colors">
+              className="flex-1 bg-ink-100 dark:bg-ink-700 text-ink-700 dark:text-ink-300 py-2 rounded-lg text-sm font-medium transition-colors">
               Anuleaza
             </button>
           </div>

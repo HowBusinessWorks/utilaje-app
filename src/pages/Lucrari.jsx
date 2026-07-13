@@ -3,8 +3,11 @@ import { api } from '../api';
 import { useToast } from '../App';
 import Modal from '../components/Modal';
 import StatusBadge from '../components/StatusBadge';
+import Select from '../components/Select';
+import { IconPlus, IconEdit, IconTrash } from '../components/icons';
 
 const TABS = ['Lucrari', 'Locatii', 'Categorii'];
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
 function LucrariTab({ toast }) {
   const [lucrari, setLucrari] = useState([]);
@@ -49,85 +52,79 @@ function LucrariTab({ toast }) {
     catch (e) { toast(e.message, 'error'); }
   };
 
-  const inputCls = "w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none";
+  const inputCls = "field";
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-center justify-between">
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-          className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
-          <option value="">Toate</option>
-          <option value="activa">Active</option>
-          <option value="finalizata">Finalizate</option>
-          <option value="suspendata">Suspendate</option>
-        </select>
-        <button onClick={openNew} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Lucrare noua</button>
+        <div className="w-44">
+          <Select value={filterStatus} onChange={setFilterStatus} placeholder="Toate"
+            options={[{ value: '', label: 'Toate' }, { value: 'activa', label: 'Active' }, { value: 'finalizata', label: 'Finalizate' }, { value: 'suspendata', label: 'Suspendate' }]} />
+        </div>
+        <button onClick={openNew} className="btn-primary"><IconPlus size={17} weight="bold" /> Lucrare noua</button>
       </div>
-      {loading ? <div className="flex justify-center h-32"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mt-8"></div></div> : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      {loading ? <div className="card h-64 animate-pulse" /> : (
+        <div className="card overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700/50">
-              <tr>
+            <thead>
+              <tr className="border-b border-ink-200/70 dark:border-ink-800">
                 {['Denumire', 'Locatie', 'Data start', 'Data sfarsit', 'Status', ''].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">{h}</th>
+                  <th key={h} className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-400">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-ink-100 dark:divide-ink-700">
               {lucrari.map(l => (
-                <tr key={l.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{l.nume}</td>
+                <tr key={l.id} className="hover:bg-ink-50 dark:hover:bg-ink-700/30">
+                  <td className="px-4 py-3 font-medium text-ink-900 dark:text-white">{l.nume}</td>
                   <td className="px-4 py-3">{l.locatie_nume || '—'}</td>
                   <td className="px-4 py-3">{l.data_start || '—'}</td>
                   <td className="px-4 py-3">{l.data_sfarsit || '—'}</td>
                   <td className="px-4 py-3"><StatusBadge status={l.status} /></td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      <button onClick={() => openEdit(l)} className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 rounded text-gray-600 dark:text-gray-300">Edit</button>
-                      <button onClick={() => handleDelete(l.id)} className="text-xs px-2 py-1 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 rounded text-red-600 dark:text-red-400">✕</button>
+                      <button onClick={() => openEdit(l)} className="grid h-8 w-8 place-items-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink-700 dark:hover:bg-ink-800" aria-label="Editeaza"><IconEdit size={16} /></button>
+                      <button onClick={() => handleDelete(l.id)} className="grid h-8 w-8 place-items-center rounded-lg text-ink-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10" aria-label="Sterge"><IconTrash size={16} /></button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {lucrari.length === 0 && <p className="text-center py-8 text-gray-400 text-sm">Nicio lucrare</p>}
+          {lucrari.length === 0 && <p className="text-center py-8 text-ink-400 text-sm">Nicio lucrare</p>}
           </div>
         </div>
       )}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editeaza lucrare' : 'Lucrare noua'}>
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Denumire *</label>
+            <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Denumire *</label>
             <input required value={form.nume} onChange={e => setForm(f => ({...f, nume: e.target.value}))} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Locatie</label>
-            <select value={form.locatie_id} onChange={e => setForm(f => ({...f, locatie_id: e.target.value}))} className={inputCls}>
-              <option value="">-- Selecteaza --</option>
-              {locatii.map(l => <option key={l.id} value={l.id}>{l.nume}</option>)}
-            </select>
+            <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Locatie</label>
+            <Select value={form.locatie_id} onChange={v => setForm(f => ({...f, locatie_id: v}))} placeholder="Selecteaza locatie"
+              options={[{ value: '', label: '—' }, ...locatii.map(l => ({ value: String(l.id), label: l.nume }))]} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data start</label>
+              <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Data start</label>
               <input type="date" value={form.data_start} onChange={e => setForm(f => ({...f, data_start: e.target.value}))} className={inputCls} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data sfarsit</label>
+              <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Data sfarsit</label>
               <input type="date" min={form.data_start || undefined} value={form.data_sfarsit} onChange={e => setForm(f => ({...f, data_sfarsit: e.target.value}))} className={inputCls} />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-            <select value={form.status} onChange={e => setForm(f => ({...f, status: e.target.value}))} className={inputCls}>
-              {['activa','finalizata','suspendata'].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-            </select>
+            <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Status</label>
+            <Select value={form.status} onChange={v => setForm(f => ({...f, status: v}))}
+              options={['activa','finalizata','suspendata'].map(s => ({ value: s, label: cap(s) }))} />
           </div>
           <div className="flex gap-3">
-            <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium">Salveaza</button>
-            <button type="button" onClick={() => setModalOpen(false)} className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm font-medium">Anuleaza</button>
+            <button type="submit" className="btn-primary flex-1">Salveaza</button>
+            <button type="button" onClick={() => setModalOpen(false)} className="btn-ghost flex-1">Anuleaza</button>
           </div>
         </form>
       </Modal>
@@ -169,80 +166,78 @@ function LocatiiTab({ toast }) {
     catch (e) { toast(e.message, 'error'); }
   };
 
-  const inputCls = "w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none";
+  const inputCls = "field";
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <button onClick={openNew} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Locatie noua</button>
+        <button onClick={openNew} className="btn-primary"><IconPlus size={17} weight="bold" /> Locatie noua</button>
       </div>
-      {loading ? <div className="flex justify-center h-32"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mt-8"></div></div> : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      {loading ? <div className="card h-64 animate-pulse" /> : (
+        <div className="card overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700/50">
-              <tr>
+            <thead>
+              <tr className="border-b border-ink-200/70 dark:border-ink-800">
                 {['Denumire', 'Adresa', 'Lat', 'Lng', 'Tip', ''].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">{h}</th>
+                  <th key={h} className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-400">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-ink-100 dark:divide-ink-700">
               {locatii.map(l => (
-                <tr key={l.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{l.nume}</td>
+                <tr key={l.id} className="hover:bg-ink-50 dark:hover:bg-ink-700/30">
+                  <td className="px-4 py-3 font-medium text-ink-900 dark:text-white">{l.nume}</td>
                   <td className="px-4 py-3">{l.adresa || '—'}</td>
-                  <td className="px-4 py-3 text-xs text-gray-500">{l.lat || '—'}</td>
-                  <td className="px-4 py-3 text-xs text-gray-500">{l.lng || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-ink-500">{l.lat || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-ink-500">{l.lng || '—'}</td>
                   <td className="px-4 py-3 capitalize">
-                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${l.tip === 'baza' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'}`}>
+                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${l.tip === 'baza' ? 'bg-brand-100 text-brand-800 dark:bg-brand-900/30 dark:text-brand-300' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'}`}>
                       {l.tip}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      <button onClick={() => openEdit(l)} className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 rounded text-gray-600 dark:text-gray-300">Edit</button>
-                      <button onClick={() => handleDelete(l.id)} className="text-xs px-2 py-1 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 rounded text-red-600 dark:text-red-400">✕</button>
+                      <button onClick={() => openEdit(l)} className="grid h-8 w-8 place-items-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink-700 dark:hover:bg-ink-800" aria-label="Editeaza"><IconEdit size={16} /></button>
+                      <button onClick={() => handleDelete(l.id)} className="grid h-8 w-8 place-items-center rounded-lg text-ink-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10" aria-label="Sterge"><IconTrash size={16} /></button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {locatii.length === 0 && <p className="text-center py-8 text-gray-400 text-sm">Nicio locatie</p>}
+          {locatii.length === 0 && <p className="text-center py-8 text-ink-400 text-sm">Nicio locatie</p>}
           </div>
         </div>
       )}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editeaza locatie' : 'Locatie noua'}>
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Denumire *</label>
+            <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Denumire *</label>
             <input required value={form.nume} onChange={e => setForm(f => ({...f, nume: e.target.value}))} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Adresa</label>
+            <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Adresa</label>
             <input value={form.adresa} onChange={e => setForm(f => ({...f, adresa: e.target.value}))} className={inputCls} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Latitudine</label>
+              <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Latitudine</label>
               <input type="number" step="0.0001" value={form.lat} onChange={e => setForm(f => ({...f, lat: e.target.value}))} className={inputCls} placeholder="ex: 46.7712" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Longitudine</label>
+              <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Longitudine</label>
               <input type="number" step="0.0001" value={form.lng} onChange={e => setForm(f => ({...f, lng: e.target.value}))} className={inputCls} placeholder="ex: 23.6236" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tip</label>
-            <select value={form.tip} onChange={e => setForm(f => ({...f, tip: e.target.value}))} className={inputCls}>
-              <option value="lucrare">Lucrare</option>
-              <option value="baza">Baza</option>
-            </select>
+            <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Tip</label>
+            <Select value={form.tip} onChange={v => setForm(f => ({...f, tip: v}))}
+              options={[{ value: 'lucrare', label: 'Lucrare' }, { value: 'baza', label: 'Baza' }]} />
           </div>
           <div className="flex gap-3">
-            <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium">Salveaza</button>
-            <button type="button" onClick={() => setModalOpen(false)} className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm font-medium">Anuleaza</button>
+            <button type="submit" className="btn-primary flex-1">Salveaza</button>
+            <button type="button" onClick={() => setModalOpen(false)} className="btn-ghost flex-1">Anuleaza</button>
           </div>
         </form>
       </Modal>
@@ -284,60 +279,60 @@ function CategoriiTab({ toast }) {
     catch (e) { toast(e.message, 'error'); }
   };
 
-  const inputCls = "w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none";
+  const inputCls = "field";
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <button onClick={openNew} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Categorie noua</button>
+        <button onClick={openNew} className="btn-primary"><IconPlus size={17} weight="bold" /> Categorie noua</button>
       </div>
-      {loading ? <div className="flex justify-center h-32"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mt-8"></div></div> : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      {loading ? <div className="card h-64 animate-pulse" /> : (
+        <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700/50">
-              <tr>
+            <thead>
+              <tr className="border-b border-ink-200/70 dark:border-ink-800">
                 {['Culoare', 'Denumire', ''].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">{h}</th>
+                  <th key={h} className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-400">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-ink-100 dark:divide-ink-700">
               {categorii.map(c => (
-                <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <tr key={c.id} className="hover:bg-ink-50 dark:hover:bg-ink-700/30">
                   <td className="px-4 py-3">
                     <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: c.culoare }}></div>
                   </td>
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{c.nume}</td>
+                  <td className="px-4 py-3 font-medium text-ink-900 dark:text-white">{c.nume}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      <button onClick={() => openEdit(c)} className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 rounded text-gray-600 dark:text-gray-300">Edit</button>
-                      <button onClick={() => handleDelete(c.id)} className="text-xs px-2 py-1 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 rounded text-red-600 dark:text-red-400">✕</button>
+                      <button onClick={() => openEdit(c)} className="grid h-8 w-8 place-items-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink-700 dark:hover:bg-ink-800" aria-label="Editeaza"><IconEdit size={16} /></button>
+                      <button onClick={() => handleDelete(c.id)} className="grid h-8 w-8 place-items-center rounded-lg text-ink-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10" aria-label="Sterge"><IconTrash size={16} /></button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {categorii.length === 0 && <p className="text-center py-8 text-gray-400 text-sm">Nicio categorie</p>}
+          {categorii.length === 0 && <p className="text-center py-8 text-ink-400 text-sm">Nicio categorie</p>}
         </div>
       )}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editeaza categorie' : 'Categorie noua'}>
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Denumire *</label>
+            <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Denumire *</label>
             <input required value={form.nume} onChange={e => setForm(f => ({...f, nume: e.target.value}))} className={inputCls} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Culoare</label>
+            <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Culoare</label>
             <div className="flex items-center gap-3">
               <input type="color" value={form.culoare} onChange={e => setForm(f => ({...f, culoare: e.target.value}))}
-                className="h-10 w-20 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer" />
+                className="h-10 w-20 border border-ink-300 dark:border-ink-600 rounded-lg cursor-pointer" />
               <input value={form.culoare} onChange={e => setForm(f => ({...f, culoare: e.target.value}))} className={inputCls + ' flex-1'} placeholder="#5b8af0" />
             </div>
           </div>
           <div className="flex gap-3">
-            <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium">Salveaza</button>
-            <button type="button" onClick={() => setModalOpen(false)} className="flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm font-medium">Anuleaza</button>
+            <button type="submit" className="btn-primary flex-1">Salveaza</button>
+            <button type="button" onClick={() => setModalOpen(false)} className="btn-ghost flex-1">Anuleaza</button>
           </div>
         </form>
       </Modal>
@@ -351,14 +346,14 @@ export default function Lucrari() {
 
   return (
     <div className="space-y-5">
-      <div className="border-b border-gray-200 dark:border-gray-700">
+      <div className="border-b border-ink-200 dark:border-ink-700">
         <div className="flex gap-1 overflow-x-auto">
           {TABS.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
                 activeTab === tab
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                  ? 'border-brand-500 text-brand-600 dark:text-brand-400'
+                  : 'border-transparent text-ink-500 dark:text-ink-400 hover:text-ink-700 dark:hover:text-ink-200'
               }`}>
               {tab}
             </button>

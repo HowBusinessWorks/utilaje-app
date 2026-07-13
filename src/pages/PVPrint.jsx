@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../api';
+import { IconPrinter } from '../components/icons';
 
 export default function PVPrint() {
   const { id } = useParams();
@@ -45,19 +46,20 @@ export default function PVPrint() {
       {/* Toolbar - ascuns la print */}
       <div className="no-print" style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        background: '#1e40af', color: 'white', padding: '10px 20px',
+        background: '#264fd0', color: 'white', padding: '10px 20px',
         display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <span style={{ fontWeight: 600, fontSize: 14 }}>Proces Verbal #{pv.id} — {pv.utilaj_denumire}</span>
         <button
           onClick={() => window.print()}
           style={{
-            marginLeft: 'auto', background: 'white', color: '#1e40af',
-            border: 'none', borderRadius: 6, padding: '7px 18px',
-            fontWeight: 700, fontSize: 14, cursor: 'pointer',
+            marginLeft: 'auto', background: 'white', color: '#264fd0',
+            border: 'none', borderRadius: 8, padding: '7px 18px',
+            fontWeight: 600, fontSize: 14, cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: 8,
           }}
         >
-          🖨️ Printeaza / Salveaza PDF
+          <IconPrinter size={16} weight="bold" /> Printeaza / Salveaza PDF
         </button>
         <button
           onClick={() => window.close()}

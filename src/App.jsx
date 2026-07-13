@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { IconCheckCircle, IconXCircle, IconWarningCircle } from './components/icons';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Utilaje from './pages/Utilaje';
@@ -43,7 +44,7 @@ export default function App() {
     <ToastContext.Provider value={addToast}>
       <BrowserRouter>
         <div className={darkMode ? 'dark' : ''}>
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+          <div className="min-h-screen bg-ink-50 font-sans text-ink-900 antialiased dark:bg-ink-950 dark:text-ink-100">
             <Routes>
               <Route path="procese-verbale/:id/print" element={<PVPrint />} />
               <Route path="/" element={<Layout darkMode={darkMode} setDarkMode={setDarkMode} />}>
@@ -61,16 +62,21 @@ export default function App() {
                 <Route path="rapoarte" element={<Rapoarte />} />
               </Route>
             </Routes>
-            <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-              {toasts.map(toast => (
-                <div key={toast.id} className={`px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all ${
-                  toast.type === 'error' ? 'bg-red-500' :
-                  toast.type === 'warning' ? 'bg-yellow-500' :
-                  'bg-green-500'
-                }`}>
-                  {toast.message}
-                </div>
-              ))}
+            <div className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2.5">
+              {toasts.map(toast => {
+                const cfg = {
+                  error:   { Icon: IconXCircle, cls: 'text-rose-500' },
+                  warning: { Icon: IconWarningCircle, cls: 'text-amber-500' },
+                  success: { Icon: IconCheckCircle, cls: 'text-emerald-500' },
+                }[toast.type] || { Icon: IconCheckCircle, cls: 'text-emerald-500' };
+                const { Icon } = cfg;
+                return (
+                  <div key={toast.id} className="flex items-center gap-2.5 rounded-xl border border-ink-200/80 bg-white px-4 py-3 text-sm font-medium text-ink-800 shadow-pop animate-pop-in dark:border-ink-700 dark:bg-ink-900 dark:text-ink-100">
+                    <Icon size={20} weight="fill" className={cfg.cls} />
+                    <span>{toast.message}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

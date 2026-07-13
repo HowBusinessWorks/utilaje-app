@@ -74,15 +74,15 @@ export default function SignaturePad({ value, onChange, label = 'Semnatura', dis
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
+      <div className="mb-1.5 flex items-center justify-between">
+        <span className="text-[13px] font-medium text-ink-600 dark:text-ink-300">{label}</span>
         {!isEmpty && !disabled && (
-          <button type="button" onClick={clear} className="text-xs text-red-500 hover:text-red-700 dark:text-red-400">
+          <button type="button" onClick={clear} className="text-xs font-medium text-rose-500 hover:text-rose-600 dark:text-rose-400">
             Sterge semnatura
           </button>
         )}
       </div>
-      <div className={`border rounded-lg overflow-hidden ${disabled ? 'opacity-60' : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 transition-colors'}`}>
+      <div className={`overflow-hidden rounded-xl border ${disabled ? 'border-ink-200 opacity-60 dark:border-ink-700' : 'border-ink-200 transition-colors hover:border-brand-400 dark:border-ink-700'}`}>
         <canvas
           ref={canvasRef}
           width={500}
@@ -98,7 +98,7 @@ export default function SignaturePad({ value, onChange, label = 'Semnatura', dis
         />
       </div>
       {isEmpty && !disabled && (
-        <p className="text-xs text-gray-400 mt-1 text-center italic">Semnati in zona de mai sus cu mouse-ul sau degetul</p>
+        <p className="mt-1 text-center text-xs italic text-ink-400">Semnati in zona de mai sus cu mouse-ul sau degetul</p>
       )}
     </div>
   );
