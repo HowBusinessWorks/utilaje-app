@@ -37,12 +37,18 @@
 
 @layer components {
   /* ---- Custom scrollbars (no default browser chrome) ---- */
-  .scroll-area {
-    scrollbar-width: thin;
-    scrollbar-color: theme('colors.ink.300') transparent;
-  }
-  .dark .scroll-area {
-    scrollbar-color: theme('colors.ink.700') transparent;
+  /* Firefox only: Chrome/Edge/Safari support ::-webkit-scrollbar and must NOT
+     also get scrollbar-width/scrollbar-color, or they switch to their native
+     "thin" scrollbar widget (with its own arrow buttons) and ignore the
+     ::-webkit-scrollbar-* rules below entirely. */
+  @supports not selector(::-webkit-scrollbar) {
+    .scroll-area {
+      scrollbar-width: thin;
+      scrollbar-color: theme('colors.ink.300') transparent;
+    }
+    .dark .scroll-area {
+      scrollbar-color: theme('colors.ink.700') transparent;
+    }
   }
   .scroll-area::-webkit-scrollbar {
     width: 9px;
@@ -70,6 +76,11 @@
     background-clip: content-box;
   }
   .scroll-area::-webkit-scrollbar-corner { background: transparent; }
+  .scroll-area::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
 
   /* ---- Reusable control surfaces ---- */
   .field {

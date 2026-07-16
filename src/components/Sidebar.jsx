@@ -4,6 +4,7 @@ import { api } from '../api';
 import {
   IconDashboard, IconUtilaj, IconFuel, IconRepair, IconCalendar,
   IconClipboard, IconWork, IconMap, IconPeople, IconReports, IconClose, IconCheck,
+  IconRefresh,
 } from './icons';
 
 const navGroups = [
@@ -44,11 +45,33 @@ function PretMotorina() {
   const [pret, setPret] = useState('');
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [fromApi, setFromApi] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchFromApi = () => api.get('/preturi-motorina/extern')
+    .then(ext => {
+      if (ext?.pret_per_litru == null) return null;
+      setPret(String(ext.pret_per_litru));
+      setFromApi(true);
+      setSaved(false);
+      return ext.pret_per_litru;
+    })
+    .catch(() => null);
 
   useEffect(() => {
+    let cancelled = false;
     api.get('/preturi-motorina/today')
-      .then(d => { if (d?.pret_per_litru) setPret(String(d.pret_per_litru)); })
+      .then(d => {
+        if (cancelled) return;
+        if (d?.pret_per_litru != null) {
+          setPret(String(d.pret_per_litru));
+          setFromApi(false);
+        } else {
+          return fetchFromApi();
+        }
+      })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, []);
 
   const handleSave = async () => {
@@ -57,19 +80,46 @@ function PretMotorina() {
     try {
       await api.post('/preturi-motorina', { data: today, pret_per_litru: Number(pret) });
       setSaved(true);
+      setFromApi(false);
       setTimeout(() => setSaved(false), 2000);
     } catch (e) { /* silent */ }
     setSaving(false);
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    const val = await fetchFromApi();
+    if (val != null) {
+      try {
+        await api.post('/preturi-motorina', { data: today, pret_per_litru: Number(val) });
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      } catch (e) { /* silent */ }
+    }
+    setRefreshing(false);
+  };
+
   return (
     <div className="rounded-xl border border-ink-200/80 bg-ink-50/60 p-3 dark:border-ink-800 dark:bg-ink-950/40">
-      <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-400">Pret motorina azi</p>
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-ink-400">
+          Pret motorina azi{fromApi && <span className="normal-case text-brand-500"> · din API</span>}
+        </p>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          title="Actualizeaza pretul din API"
+          aria-label="Actualizeaza pretul din API"
+          className="shrink-0 rounded-md p-0.5 text-ink-400 transition-colors hover:bg-ink-200/60 hover:text-ink-700 disabled:opacity-50 dark:hover:bg-ink-800 dark:hover:text-ink-100"
+        >
+          <IconRefresh size={13} className={refreshing ? 'animate-spin' : ''} />
+        </button>
+      </div>
       <div className="flex items-center gap-1.5">
         <div className="flex flex-1 items-center rounded-lg border border-ink-200 bg-white px-2 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/15 dark:border-ink-700 dark:bg-ink-900">
           <input
             type="number" step="0.01" min="0" value={pret}
-            onChange={e => { setPret(e.target.value); setSaved(false); }}
+            onChange={e => { setPret(e.target.value); setSaved(false); setFromApi(false); }}
             onKeyDown={e => e.key === 'Enter' && handleSave()}
             placeholder="0.00"
             className="w-full min-w-0 bg-transparent py-1.5 text-sm tabular text-ink-900 outline-none dark:text-ink-50"

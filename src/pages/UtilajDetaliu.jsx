@@ -346,7 +346,7 @@ export default function UtilajDetaliu() {
 
       {/* Tabs */}
       <div className="border-b border-ink-200 dark:border-ink-700">
-        <div className="flex gap-1 overflow-x-auto">
+        <div className="flex gap-1 overflow-x-auto overflow-y-hidden">
           {TABS.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
