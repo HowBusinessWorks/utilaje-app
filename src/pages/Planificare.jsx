@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../App';
+import { useInbox } from '../inbox';
 import Modal from '../components/Modal';
 import Select from '../components/Select';
-import { IconArrowLeft, IconArrowRight, IconSort, IconClipboard } from '../components/icons';
+import { StatusBadge, SolicitareBody, SolicitareActions } from '../components/solicitari';
+import { IconArrowLeft, IconArrowRight, IconSort, IconClipboard, IconInbox, IconClose } from '../components/icons';
 
 // Formatare dată folosind ora LOCALĂ (nu UTC) — fix pentru timezone UTC+2/+3
 function toDateStr(d) {
@@ -64,7 +66,13 @@ const DAY_NAMES = ['Lu', 'Ma', 'Mi', 'Jo', 'Vi', 'Sa', 'Du'];
 export default function Planificare() {
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const inbox = useInbox();
   const today = toDateStr(new Date());
+
+  const [solicitari, setSolicitari] = useState([]);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [highlightId, setHighlightId] = useState(null);
 
   const [planificari, setPlanificari] = useState([]);
   const [utilaje, setUtilaje] = useState([]);
@@ -170,6 +178,31 @@ export default function Planificare() {
   }, [windowStart, windowEnd]);
 
   useEffect(() => { load(); }, [load]);
+
+  const loadSolicitari = useCallback(async () => {
+    try {
+      const all = await api.get('/solicitari');
+      setSolicitari(all.filter(s => s.status === 'noua'));
+    } catch (e) { /* silent */ }
+  }, []);
+
+  useEffect(() => { loadSolicitari(); }, [loadSolicitari]);
+
+  // Deschidere din butonul "Vezi in planificare" al inbox-ului
+  useEffect(() => {
+    const id = location.state?.solicitareId;
+    if (id) {
+      setPanelOpen(true);
+      setHighlightId(id);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, []); // eslint-disable-line
+
+  const onSolicitareDone = () => {
+    loadSolicitari();
+    load();
+    inbox?.refreshCount();
+  };
 
   useEffect(() => {
     const onMouseUp = () => {
@@ -325,6 +358,15 @@ export default function Planificare() {
           <button onClick={() => { setDecalareForm({ zile: '', data_referinta: today, selectedUtilaje: [] }); setDecalareOpen(true); }}
             className="btn-ghost">
             <IconSort size={16} /> Decalare
+          </button>
+          <button onClick={() => { setHighlightId(null); setPanelOpen(true); }}
+            className="btn-ghost relative">
+            <IconInbox size={16} /> Solicitari
+            {solicitari.length > 0 && (
+              <span className="grid h-5 min-w-[20px] place-items-center rounded-full bg-amber-500 px-1 text-[11px] font-bold text-white">
+                {solicitari.length}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -678,6 +720,53 @@ export default function Planificare() {
           </div>
         </form>
       </Modal>
+
+      {/* Panou lateral: solicitari in asteptare */}
+      {panelOpen && (
+        <>
+          <div className="fixed inset-0 z-40 bg-ink-950/40 backdrop-blur-sm" onClick={() => setPanelOpen(false)} />
+          <div className="fixed inset-y-0 right-0 z-50 flex w-[calc(100vw-2rem)] max-w-[420px] flex-col border-l border-ink-200 bg-white shadow-2xl dark:border-ink-800 dark:bg-ink-900">
+            <div className="flex items-center justify-between border-b border-ink-100 px-4 py-3.5 dark:border-ink-800">
+              <div>
+                <p className="text-sm font-semibold text-ink-900 dark:text-white">Solicitari in asteptare</p>
+                <p className="text-[11px] text-ink-400">Accepta pentru a crea planificarea automat</p>
+              </div>
+              <button onClick={() => setPanelOpen(false)}
+                className="grid h-7 w-7 place-items-center rounded-lg text-ink-400 hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800"
+                aria-label="Inchide">
+                <IconClose size={16} />
+              </button>
+            </div>
+            <div className="scroll-area flex-1 overflow-y-auto p-3">
+              {solicitari.length === 0 ? (
+                <div className="grid place-items-center gap-2 py-12 text-center">
+                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-ink-100 text-ink-400 dark:bg-ink-800">
+                    <IconInbox size={24} />
+                  </span>
+                  <p className="text-sm text-ink-500">Nicio solicitare in asteptare</p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {solicitari.map(sol => (
+                    <div key={sol.id}
+                      className={`rounded-xl border p-3 transition-colors ${
+                        String(highlightId) === String(sol.id)
+                          ? 'border-brand-500 bg-brand-50/50 ring-2 ring-brand-500/20 dark:border-brand-500 dark:bg-brand-500/10'
+                          : 'border-ink-200/70 dark:border-ink-800'
+                      }`}>
+                      <div className="mb-2"><StatusBadge status={sol.status} /></div>
+                      <SolicitareBody sol={sol} showSolicitant />
+                      <div className="mt-3">
+                        <SolicitareActions sol={sol} onDone={onSolicitareDone} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

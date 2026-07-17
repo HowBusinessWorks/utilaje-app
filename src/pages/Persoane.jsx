@@ -3,7 +3,7 @@ import { api } from '../api';
 import { useToast } from '../App';
 import Modal from '../components/Modal';
 import Select from '../components/Select';
-import { IconPlus, IconSearch, IconPeople, IconEdit, IconTrash } from '../components/icons';
+import { IconPlus, IconSearch, IconPeople, IconEdit, IconTrash, IconLock, IconEye, IconEyeSlash } from '../components/icons';
 
 const categoriaLabel = { angajat: 'Angajat', sef_santier: 'Sef santier', subcontractant: 'Subcontractant' };
 const categoriaTone = {
@@ -20,7 +20,8 @@ export default function Persoane() {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ nume: '', telefon: '', categorie: 'angajat' });
+  const [form, setForm] = useState({ nume: '', telefon: '', categorie: 'angajat', parola: '' });
+  const [showPass, setShowPass] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -42,13 +43,15 @@ export default function Persoane() {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ nume: '', telefon: '', categorie: activeTab });
+    setShowPass(false);
+    setForm({ nume: '', telefon: '', categorie: activeTab, parola: '' });
     setModalOpen(true);
   };
 
   const openEdit = (p) => {
     setEditing(p);
-    setForm({ nume: p.nume, telefon: p.telefon || '', categorie: p.categorie });
+    setShowPass(false);
+    setForm({ nume: p.nume, telefon: p.telefon || '', categorie: p.categorie, parola: '' });
     setModalOpen(true);
   };
 
@@ -136,8 +139,15 @@ export default function Persoane() {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-ink-900 dark:text-white">{p.nume}</p>
                 {p.telefon && <p className="text-sm tabular text-ink-500 dark:text-ink-400">{p.telefon}</p>}
-                <span className={`mt-1 inline-block rounded-md px-2 py-0.5 text-xs font-medium ${categoriaTone[p.categorie]}`}>
-                  {categoriaLabel[p.categorie]}
+                <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <span className={`inline-block rounded-md px-2 py-0.5 text-xs font-medium ${categoriaTone[p.categorie]}`}>
+                    {categoriaLabel[p.categorie]}
+                  </span>
+                  {p.are_cont && (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-ink-100 px-1.5 py-0.5 text-xs font-medium text-ink-500 dark:bg-ink-800 dark:text-ink-400">
+                      <IconLock size={11} /> Cont
+                    </span>
+                  )}
                 </span>
               </div>
               <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -165,6 +175,37 @@ export default function Persoane() {
             <Select value={form.categorie} onChange={v => setForm(f => ({ ...f, categorie: v }))}
               options={[{ value: 'angajat', label: 'Angajat' }, { value: 'sef_santier', label: 'Sef santier' }, { value: 'subcontractant', label: 'Subcontractant' }]} />
           </div>
+
+          {form.categorie === 'sef_santier' && (
+            <div className="rounded-xl border border-ink-200/80 bg-ink-50/60 p-3 dark:border-ink-800 dark:bg-ink-950/40">
+              <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
+                <IconLock size={13} /> Cont de autentificare
+              </div>
+              <p className="mb-2.5 text-[12px] text-ink-500">
+                Seful de santier se logheaza cu <span className="font-medium">numarul de telefon</span> de mai sus si parola setata aici.
+              </p>
+              <label className="mb-1.5 block text-[13px] font-medium text-ink-600 dark:text-ink-300">
+                {editing?.are_cont ? 'Parola noua' : 'Parola'}
+                {editing?.are_cont && <span className="ml-1 font-normal text-ink-400">(lasa gol pentru a pastra)</span>}
+              </label>
+              <div className="relative">
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  value={form.parola}
+                  onChange={e => setForm(f => ({ ...f, parola: e.target.value }))}
+                  className="field pr-9"
+                  placeholder={editing?.are_cont ? '••••••••' : 'Seteaza o parola'}
+                  autoComplete="new-password"
+                />
+                <button type="button" onClick={() => setShowPass(s => !s)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink-400 hover:text-ink-600 dark:hover:text-ink-200"
+                  aria-label={showPass ? 'Ascunde parola' : 'Arata parola'}>
+                  {showPass ? <IconEyeSlash size={16} /> : <IconEye size={16} />}
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <button type="submit" className="btn-primary flex-1">Salveaza</button>
             <button type="button" onClick={() => setModalOpen(false)} className="btn-ghost flex-1">Anuleaza</button>

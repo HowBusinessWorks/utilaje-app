@@ -1,44 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { api } from '../api';
-import {
-  IconDashboard, IconUtilaj, IconFuel, IconRepair, IconCalendar,
-  IconClipboard, IconWork, IconMap, IconPeople, IconReports, IconClose, IconCheck,
-  IconRefresh,
-} from './icons';
-
-const navGroups = [
-  {
-    label: null,
-    items: [
-      { to: '/dashboard', label: 'Dashboard', Icon: IconDashboard },
-    ],
-  },
-  {
-    label: 'Utilaje',
-    items: [
-      { to: '/utilaje', label: 'Utilaje', Icon: IconUtilaj },
-      { to: '/motorina', label: 'Motorina', Icon: IconFuel },
-      { to: '/reparatii', label: 'Reparatii', Icon: IconRepair },
-      { to: '/planificare', label: 'Planificari', Icon: IconCalendar },
-      { to: '/procese-verbale', label: 'Procese verbale', Icon: IconClipboard },
-    ],
-  },
-  {
-    label: 'Operatiuni',
-    items: [
-      { to: '/lucrari', label: 'Lucrari', Icon: IconWork },
-      { to: '/harta', label: 'Harta', Icon: IconMap },
-    ],
-  },
-  {
-    label: 'Resurse',
-    items: [
-      { to: '/persoane', label: 'Persoane', Icon: IconPeople },
-      { to: '/rapoarte', label: 'Rapoarte', Icon: IconReports },
-    ],
-  },
-];
+import { useAuth } from '../auth';
+import { adminNav, sefNav } from '../nav';
+import { IconCheck, IconRefresh, IconLogout, IconUtilaj } from './icons';
 
 function PretMotorina() {
   const today = new Date().toISOString().slice(0, 10);
@@ -142,12 +107,12 @@ function PretMotorina() {
   );
 }
 
-export default function Sidebar({ open, onClose }) {
+export default function Sidebar() {
+  const { user, logout } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  const navGroups = isAdmin ? adminNav : sefNav;
   return (
-    <aside
-      className="fixed inset-y-0 left-0 z-30 flex w-[260px] -translate-x-full flex-col border-r border-ink-200/80 bg-white transition-transform duration-200 dark:border-ink-800 dark:bg-ink-950 lg:relative lg:inset-auto lg:w-[260px] lg:translate-x-0 lg:shrink-0"
-      style={open ? { transform: 'translateX(0)' } : undefined}
-    >
+    <aside className="hidden w-[260px] shrink-0 flex-col border-r border-ink-200/80 bg-white dark:border-ink-800 dark:bg-ink-950 lg:flex">
       <div className="flex items-start justify-between gap-2 px-5 pb-4 pt-5">
         <div className="flex items-center gap-2.5">
           <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-600 text-white shadow-sm">
@@ -158,18 +123,13 @@ export default function Sidebar({ open, onClose }) {
             <p className="text-[11px] font-medium text-ink-400">Utilaje &amp; teren</p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="rounded-lg p-1.5 text-ink-400 hover:bg-ink-100 hover:text-ink-600 dark:hover:bg-ink-800 lg:hidden"
-          aria-label="Inchide meniu"
-        >
-          <IconClose size={18} />
-        </button>
       </div>
 
-      <div className="px-3 pb-3">
-        <PretMotorina />
-      </div>
+      {isAdmin && (
+        <div className="px-3 pb-3">
+          <PretMotorina />
+        </div>
+      )}
 
       <nav className="scroll-area flex-1 space-y-5 overflow-y-auto px-3 py-2">
         {navGroups.map((group, gi) => (
@@ -184,7 +144,6 @@ export default function Sidebar({ open, onClose }) {
                 <NavLink
                   key={to}
                   to={to}
-                  onClick={onClose}
                   className={({ isActive }) =>
                     `group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                       isActive
@@ -207,8 +166,24 @@ export default function Sidebar({ open, onClose }) {
         ))}
       </nav>
 
-      <div className="border-t border-ink-200/70 px-5 py-3.5 dark:border-ink-800">
-        <p className="text-[11px] text-ink-400">Gestiune Utilaje · v1.0</p>
+      <div className="mt-auto border-t border-ink-200/70 p-3 dark:border-ink-800">
+        <div className="flex items-center gap-3 rounded-lg px-2 py-1.5">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
+            {(user?.nume || '?').charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1 leading-tight">
+            <p className="truncate text-[13px] font-medium text-ink-900 dark:text-white">{user?.nume}</p>
+            <p className="text-[11px] text-ink-400">{isAdmin ? 'Administrator' : 'Sef santier'}</p>
+          </div>
+          <button
+            onClick={logout}
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
+            title="Deconectare"
+            aria-label="Deconectare"
+          >
+            <IconLogout size={17} />
+          </button>
+        </div>
       </div>
     </aside>
   );
