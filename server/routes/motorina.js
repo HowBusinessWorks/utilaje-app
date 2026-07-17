@@ -6,6 +6,19 @@ const { uploadFile, deleteFile } = require('../storage');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Un sef de santier poate alimenta doar utilajul dintr-un PV deschis pe numele lui.
+async function findOpenPvForSef(utilaj_id, sef_santier_id) {
+  const { data } = await supabase.from('procese_verbale')
+    .select('id, lucrare_id').eq('utilaj_id', utilaj_id).eq('status', 'deschis')
+    .eq('sef_santier_id', sef_santier_id).maybeSingle();
+  return data;
+}
+
+async function loadFisa(id) {
+  const { data } = await supabase.from('fise_motorina').select('*').eq('id', id).maybeSingle();
+  return data;
+}
+
 router.get('/', async (req, res) => {
   try {
     let query = supabase.from('v_motorina').select('*').order('data_consum', { ascending: false });
@@ -14,6 +27,7 @@ router.get('/', async (req, res) => {
     if (lucrare_id)  query = query.eq('lucrare_id', lucrare_id);
     if (data_start)  query = query.gte('data_consum', data_start);
     if (data_sfarsit) query = query.lte('data_consum', data_sfarsit);
+    if (req.user.role !== 'admin') query = query.eq('persoana_id', req.user.id);
     const { data, error } = await query;
     if (error) throw error;
     res.json(data);
@@ -22,7 +36,13 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { utilaj_id, lucrare_id, persoana_id, data_consum, nr_litri, furnizor, ore_contor, observatii } = req.body;
+    let { utilaj_id, lucrare_id, persoana_id, data_consum, nr_litri, furnizor, ore_contor, observatii } = req.body;
+    if (req.user.role !== 'admin') {
+      const pv = await findOpenPvForSef(utilaj_id, req.user.id);
+      if (!pv) return res.status(403).json({ error: 'Poti adauga o fisa de motorina doar pentru un utilaj cu proces verbal deschis pe numele tau.' });
+      persoana_id = req.user.id;
+      lucrare_id = lucrare_id || pv.lucrare_id;
+    }
     const { data, error } = await supabase.from('fise_motorina')
       .insert({ utilaj_id, lucrare_id: lucrare_id || null, persoana_id: persoana_id || null,
                 data_consum, nr_litri, furnizor: furnizor || null,
@@ -38,7 +58,15 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
+    if (req.user.role !== 'admin') {
+      const fisa = await loadFisa(req.params.id);
+      if (!fisa || fisa.persoana_id !== req.user.id) return res.status(403).json({ error: 'Acces interzis' });
+    }
     const { utilaj_id, lucrare_id, persoana_id, data_consum, nr_litri, furnizor, ore_contor, observatii } = req.body;
+    if (req.user.role !== 'admin') {
+      const pv = await findOpenPvForSef(utilaj_id, req.user.id);
+      if (!pv) return res.status(403).json({ error: 'Poti alimenta doar utilajul cu proces verbal deschis pe numele tau.' });
+    }
     const { error } = await supabase.from('fise_motorina')
       .update({ utilaj_id, lucrare_id: lucrare_id || null, persoana_id: persoana_id || null,
                 data_consum, nr_litri, furnizor: furnizor || null,
@@ -52,7 +80,8 @@ router.put('/:id', async (req, res) => {
 router.post('/:id/document', upload.single('document'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Fisier lipsa' });
-    const { data: fisa } = await supabase.from('fise_motorina').select('document_url').eq('id', req.params.id).single();
+    const fisa = await loadFisa(req.params.id);
+    if (req.user.role !== 'admin' && (!fisa || fisa.persoana_id !== req.user.id)) return res.status(403).json({ error: 'Acces interzis' });
     if (fisa?.document_url) await deleteFile('motorina', fisa.document_url);
     const ext = req.file.originalname.split('.').pop();
     const url = await uploadFile('motorina', `docs/${req.params.id}/${Date.now()}.${ext}`, req.file.buffer, req.file.mimetype);
@@ -63,7 +92,8 @@ router.post('/:id/document', upload.single('document'), async (req, res) => {
 
 router.delete('/:id/document', async (req, res) => {
   try {
-    const { data: fisa } = await supabase.from('fise_motorina').select('document_url').eq('id', req.params.id).single();
+    const fisa = await loadFisa(req.params.id);
+    if (req.user.role !== 'admin' && (!fisa || fisa.persoana_id !== req.user.id)) return res.status(403).json({ error: 'Acces interzis' });
     if (fisa?.document_url) await deleteFile('motorina', fisa.document_url);
     await supabase.from('fise_motorina').update({ document_url: null }).eq('id', req.params.id);
     res.json({ ok: true });
@@ -72,6 +102,10 @@ router.delete('/:id/document', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
+    if (req.user.role !== 'admin') {
+      const fisa = await loadFisa(req.params.id);
+      if (!fisa || fisa.persoana_id !== req.user.id) return res.status(403).json({ error: 'Acces interzis' });
+    }
     const { error } = await supabase.from('fise_motorina').delete().eq('id', req.params.id);
     if (error) throw error;
     res.json({ ok: true });

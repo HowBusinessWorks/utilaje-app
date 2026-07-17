@@ -17,7 +17,9 @@ import Lucrari from './pages/Lucrari';
 import Persoane from './pages/Persoane';
 import Rapoarte from './pages/Rapoarte';
 import Solicitari from './pages/Solicitari';
+import PVSef from './pages/PVSef';
 import PVPrint from './pages/PVPrint';
+import MotorinaSef from './pages/MotorinaSef';
 
 export const ToastContext = createContext(null);
 
@@ -90,7 +92,7 @@ export default function App() {
           <div className="min-h-screen bg-ink-50 font-sans text-ink-900 antialiased dark:bg-ink-950 dark:text-ink-100">
             <Routes>
               <Route path="/login" element={<LoginRoute />} />
-              <Route path="procese-verbale/:id/print" element={<RequireAuth roles={['admin']}><PVPrint /></RequireAuth>} />
+              <Route path="procese-verbale/:id/print" element={<RequireAuth roles={['sef_santier', 'admin']}><PVPrint /></RequireAuth>} />
               <Route path="/" element={<RequireAuth><Layout darkMode={darkMode} setDarkMode={setDarkMode} /></RequireAuth>}>
                 <Route index element={<HomeRedirect />} />
                 {/* Administrator */}
@@ -107,6 +109,8 @@ export default function App() {
                 <Route path="rapoarte" element={adminOnly(<Rapoarte />)} />
                 {/* Sef de santier */}
                 <Route path="solicitari" element={<RequireAuth roles={['sef_santier', 'admin']}><Solicitari /></RequireAuth>} />
+                <Route path="pv-mele" element={<RequireAuth roles={['sef_santier', 'admin']}><PVSef /></RequireAuth>} />
+                <Route path="motorina-mea" element={<RequireAuth roles={['sef_santier', 'admin']}><MotorinaSef /></RequireAuth>} />
               </Route>
             </Routes>
             <div className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2.5">

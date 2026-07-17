@@ -12,6 +12,7 @@ router.get('/', async (req, res) => {
     const { utilaj_id, status } = req.query;
     if (utilaj_id) query = query.eq('utilaj_id', utilaj_id);
     if (status)    query = query.eq('status', status);
+    if (req.user.role !== 'admin') query = query.eq('sef_santier_id', req.user.id);
     const { data, error } = await query;
     if (error) throw error;
     res.json(data);
@@ -22,6 +23,9 @@ router.get('/:id', async (req, res) => {
   try {
     const { data: pv, error } = await supabase.from('v_pvp').select('*').eq('id', req.params.id).single();
     if (error || !pv) return res.status(404).json({ error: 'PV negasit' });
+    if (req.user.role !== 'admin' && pv.sef_santier_id !== req.user.id) {
+      return res.status(403).json({ error: 'Acces interzis' });
+    }
     const [{ data: poze }, { data: accesorii }] = await Promise.all([
       supabase.from('pv_poze').select('*').eq('pv_id', req.params.id),
       supabase.from('pv_accesorii').select('*').eq('pv_id', req.params.id).order('id'),

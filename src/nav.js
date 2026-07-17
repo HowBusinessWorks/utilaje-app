@@ -42,6 +42,8 @@ export const sefNav = [
     label: null,
     items: [
       { to: '/solicitari', label: 'Solicitari', Icon: IconRequest },
+      { to: '/pv-mele', label: 'Procese verbale', Icon: IconClipboard },
+      { to: '/motorina-mea', label: 'Motorina', Icon: IconFuel },
     ],
   },
 ];
