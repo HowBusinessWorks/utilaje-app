@@ -58,18 +58,6 @@ export default function PVSef() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-3 lg:space-y-6">
-      {/* Antet */}
-      <div className="hidden items-center gap-3 lg:flex">
-        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand-600 text-white shadow-sm">
-          <IconClipboard size={22} weight="fill" />
-        </span>
-        <div>
-          <h1 className="text-xl font-semibold text-ink-900 dark:text-white">Procese verbale</h1>
-          <p className="text-sm text-ink-500">Procesele verbale in care ai fost mentionat ca sef de santier.</p>
-        </div>
-      </div>
-      <h1 className="text-lg font-semibold text-ink-900 dark:text-white lg:hidden">Procesele mele verbale</h1>
-
       {/* Lista */}
       {loading ? (
         <div className="space-y-2.5">

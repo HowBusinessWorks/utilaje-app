@@ -140,6 +140,8 @@ export default function Select({
             top: rect.bottom + 6,
             left: rect.left,
             width: rect.width,
+            touchAction: 'pan-y',
+            overscrollBehavior: 'none',
           }}
         >
           {norm.length === 0 && (

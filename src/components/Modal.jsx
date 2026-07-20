@@ -1,17 +1,16 @@
 import React, { useEffect } from 'react';
 import { IconClose } from './icons';
+import useScrollLock from '../hooks/useScrollLock';
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }) {
+  useScrollLock(isOpen);
+
   useEffect(() => {
     const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
     if (isOpen) {
       document.addEventListener('keydown', handleEsc);
-      document.body.style.overflow = 'hidden';
     }
-    return () => {
-      document.removeEventListener('keydown', handleEsc);
-      document.body.style.overflow = '';
-    };
+    return () => document.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -28,6 +27,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
       <div className="absolute inset-0 bg-ink-950/50 backdrop-blur-sm animate-fade-in" onClick={onClose} />
       <div
         className={`relative flex max-h-[95vh] w-full flex-col rounded-t-2xl bg-white shadow-pop animate-sheet-up dark:bg-ink-900 sm:max-h-[94vh] sm:rounded-2xl ${sizeClass}`}
+        style={{ touchAction: 'pan-y', overscrollBehavior: 'none' }}
         role="dialog"
         aria-modal="true"
       >

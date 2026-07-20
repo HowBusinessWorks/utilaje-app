@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../App';
 import Modal from '../components/Modal';
@@ -14,6 +14,7 @@ const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 export default function ProceseVerbale() {
   const toast = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   const [pvp, setPvp] = useState([]);
   const [utilaje, setUtilaje] = useState([]);
   const [lucrari, setLucrari] = useState([]);
@@ -81,7 +82,7 @@ export default function ProceseVerbale() {
       responsabil_predare: fromPlan.responsabil_predare || '',
     }));
     setModalOpen(true);
-    window.history.replaceState({}, '');
+    navigate(location.pathname, { replace: true, state: {} });
   }, [location.state, loading]);
 
   // Load accesorii when utilaj changes (for new PV)
@@ -360,11 +361,19 @@ export default function ProceseVerbale() {
                 <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Utilaj *</label>
                 <Select value={formPredare.utilaj_id} onChange={v => setFormPredare(f => ({...f, utilaj_id: v}))} placeholder="Selecteaza utilaj" disabled={!!editing}
                   options={utilaje.map(u => ({ value: String(u.id), label: u.denumire }))} />
-                {!editing && formPredare.utilaj_id && pvp.some(p => String(p.utilaj_id) === String(formPredare.utilaj_id) && p.status === 'deschis') && (
-                  <p className="mt-1.5 text-xs text-red-600 dark:text-red-400 font-medium">
-                    Acest utilaj are deja un PV deschis. Inchide-l inainte de a crea unul nou.
-                  </p>
-                )}
+                {!editing && formPredare.utilaj_id && (() => {
+                  const openForThisUtilaj = pvp.find(p => String(p.utilaj_id) === String(formPredare.utilaj_id) && p.status === 'deschis');
+                  if (!openForThisUtilaj) return null;
+                  return (
+                    <p className="mt-1.5 text-xs text-red-600 dark:text-red-400 font-medium">
+                      Acest utilaj are deja un PV deschis (predat pe {openForThisUtilaj.data_predare}). Inchide-l inainte de a crea unul nou.{' '}
+                      <button type="button" onClick={() => openEdit(openForThisUtilaj)}
+                        className="underline underline-offset-2 hover:text-red-700 dark:hover:text-red-300">
+                        Deschide PV-ul existent
+                      </button>
+                    </p>
+                  );
+                })()}
               </div>
               <div>
                 <label className="block text-sm font-medium text-ink-700 dark:text-ink-300 mb-1">Lucrare</label>

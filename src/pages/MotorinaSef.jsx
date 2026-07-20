@@ -112,20 +112,8 @@ export default function MotorinaSef() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-3 lg:space-y-6">
-      {/* Antet - laptop */}
-      <div className="hidden items-center gap-3 lg:flex">
-        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand-600 text-white shadow-sm">
-          <IconFuel size={22} weight="fill" />
-        </span>
-        <div>
-          <h1 className="text-xl font-semibold text-ink-900 dark:text-white">Fise de motorina</h1>
-          <p className="text-sm text-ink-500">Alimentarile facute de tine pe utilajele predate.</p>
-        </div>
-      </div>
-
-      {/* Antet - mobil */}
-      <div className="flex items-center justify-between gap-3 lg:hidden">
-        <h1 className="text-lg font-semibold text-ink-900 dark:text-white">Fisele mele de motorina</h1>
+      {/* Antet - mobil, doar butonul + pentru fisa noua (titlul e in bara de sus) */}
+      <div className="flex items-center justify-end gap-3 lg:hidden">
         <button
           onClick={openNew}
           disabled={loading || pvDeschise.length === 0}

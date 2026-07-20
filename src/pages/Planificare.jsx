@@ -7,6 +7,7 @@ import Modal from '../components/Modal';
 import Select from '../components/Select';
 import { StatusBadge, SolicitareBody, SolicitareActions } from '../components/solicitari';
 import { IconArrowLeft, IconArrowRight, IconSort, IconClipboard, IconInbox, IconClose } from '../components/icons';
+import useScrollLock from '../hooks/useScrollLock';
 
 // Formatare dată folosind ora LOCALĂ (nu UTC) — fix pentru timezone UTC+2/+3
 function toDateStr(d) {
@@ -73,6 +74,8 @@ export default function Planificare() {
   const [solicitari, setSolicitari] = useState([]);
   const [panelOpen, setPanelOpen] = useState(false);
   const [highlightId, setHighlightId] = useState(null);
+
+  useScrollLock(panelOpen);
 
   const [planificari, setPlanificari] = useState([]);
   const [utilaje, setUtilaje] = useState([]);
@@ -725,7 +728,8 @@ export default function Planificare() {
       {panelOpen && (
         <>
           <div className="fixed inset-0 z-40 bg-ink-950/40 backdrop-blur-sm" onClick={() => setPanelOpen(false)} />
-          <div className="fixed inset-y-0 right-0 z-50 flex w-[calc(100vw-2rem)] max-w-[420px] flex-col border-l border-ink-200 bg-white shadow-2xl dark:border-ink-800 dark:bg-ink-900">
+          <div className="fixed inset-y-0 right-0 z-50 flex w-[calc(100vw-2rem)] max-w-[420px] flex-col border-l border-ink-200 bg-white shadow-2xl dark:border-ink-800 dark:bg-ink-900"
+            style={{ touchAction: 'pan-y', overscrollBehavior: 'none' }}>
             <div className="flex items-center justify-between border-b border-ink-100 px-4 py-3.5 dark:border-ink-800">
               <div>
                 <p className="text-sm font-semibold text-ink-900 dark:text-white">Solicitari in asteptare</p>

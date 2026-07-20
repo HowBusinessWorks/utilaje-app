@@ -5,6 +5,7 @@ import { useAuth } from '../auth';
 import { useInbox } from '../inbox';
 import { StatusBadge, SolicitareBody, SolicitareActions, fmtDate } from './solicitari';
 import { IconInbox, IconClose, IconCalendar, IconSpinner } from './icons';
+import useScrollLock from '../hooks/useScrollLock';
 
 export default function Inbox() {
   const { user } = useAuth();
@@ -16,6 +17,8 @@ export default function Inbox() {
   const wrapRef = useRef(null);
   const btnRef = useRef(null);
   const panelRef = useRef(null);
+
+  useScrollLock(open);
 
   const place = useCallback(() => {
     if (btnRef.current) setRect(btnRef.current.getBoundingClientRect());
@@ -82,6 +85,8 @@ export default function Inbox() {
               Math.max(16, rect.right - Math.min(420, window.innerWidth - 32)),
               window.innerWidth - 16 - Math.min(420, window.innerWidth - 32)
             ),
+            touchAction: 'pan-y',
+            overscrollBehavior: 'none',
           }}
         >
           <div className="flex items-center justify-between border-b border-ink-100 px-4 py-3 dark:border-ink-800">

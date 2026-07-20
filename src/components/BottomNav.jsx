@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { adminNav, sefNav } from '../nav';
 import { IconLogout, IconSun, IconMoon, IconClose } from './icons';
+import useScrollLock from '../hooks/useScrollLock';
 
 // Navigatie mobila stil aplicatie (bara jos), inlocuieste sidebar-ul pe telefon.
 export default function BottomNav({ darkMode, setDarkMode }) {
@@ -12,6 +13,8 @@ export default function BottomNav({ darkMode, setDarkMode }) {
   const items = navGroups.flatMap(g => g.items);
   const [accountOpen, setAccountOpen] = useState(false);
   const sheetRef = useRef(null);
+
+  useScrollLock(accountOpen);
 
   useEffect(() => {
     if (!accountOpen) return;
@@ -23,7 +26,7 @@ export default function BottomNav({ darkMode, setDarkMode }) {
   return (
     <>
       <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-ink-200/80 bg-white/95 backdrop-blur-md dark:border-ink-800 dark:bg-ink-950/95 lg:hidden"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)', transform: 'translateY(3px)' }}>
         <div className="scroll-area flex w-full items-stretch overflow-x-auto">
           {items.map(({ to, label, Icon }) => (
             <NavLink
@@ -58,7 +61,7 @@ export default function BottomNav({ darkMode, setDarkMode }) {
       {accountOpen && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink-950/40 backdrop-blur-sm lg:hidden">
           <div ref={sheetRef} className="w-full rounded-t-2xl bg-white p-4 shadow-pop animate-sheet-up dark:bg-ink-900"
-            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}>
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)', touchAction: 'pan-y', overscrollBehavior: 'none' }}>
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">

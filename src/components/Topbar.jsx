@@ -16,6 +16,8 @@ const pageTitles = {
   '/persoane': 'Persoane',
   '/rapoarte': 'Rapoarte',
   '/solicitari': 'Solicitari',
+  '/pv-mele': 'Procese verbale',
+  '/motorina-mea': 'Motorina',
 };
 
 export default function Topbar({ darkMode, setDarkMode }) {

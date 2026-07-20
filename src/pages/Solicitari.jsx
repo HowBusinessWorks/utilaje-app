@@ -264,20 +264,8 @@ export default function Solicitari() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-3 lg:space-y-6">
-      {/* Antet - laptop */}
-      <div className="hidden items-center gap-3 lg:flex">
-        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand-600 text-white shadow-sm">
-          <IconRequest size={22} weight="fill" />
-        </span>
-        <div>
-          <h1 className="text-xl font-semibold text-ink-900 dark:text-white">Solicita un utilaj</h1>
-          <p className="text-sm text-ink-500">Completeaza pasii de mai jos si trimite cererea catre birou.</p>
-        </div>
-      </div>
-
-      {/* Antet - mobil, doar titlul si butonul + pentru solicitare noua */}
-      <div className="flex items-center justify-between gap-3 lg:hidden">
-        <h1 className="text-lg font-semibold text-ink-900 dark:text-white">Solicitarile mele</h1>
+      {/* Antet - mobil, doar butonul + pentru solicitare noua (titlul e in bara de sus) */}
+      <div className="flex items-center justify-end gap-3 lg:hidden">
         <button
           onClick={() => setFormOpen(true)}
           className="btn-primary h-10 w-10 shrink-0 rounded-full p-0"
