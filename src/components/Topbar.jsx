@@ -27,7 +27,7 @@ export default function Topbar({ darkMode, setDarkMode }) {
   const title = pageTitles[path] || 'Gestiune Utilaje';
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b border-ink-200/80 bg-white/80 px-4 backdrop-blur-md dark:border-ink-800 dark:bg-ink-950/80 lg:px-8">
+    <header className="sticky top-0 z-10 flex h-16 shrink-0 touch-none select-none items-center justify-between border-b border-ink-200/80 bg-white/80 px-4 backdrop-blur-md dark:border-ink-800 dark:bg-ink-950/80 lg:px-8">
       <div className="flex min-w-0 items-center gap-3">
         <h2 className="truncate text-lg font-semibold tracking-tight text-ink-900 dark:text-white">{title}</h2>
       </div>

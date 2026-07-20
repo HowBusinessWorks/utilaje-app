@@ -6,7 +6,7 @@ import BottomNav from './BottomNav';
 
 export default function Layout({ darkMode, setDarkMode }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-ink-50 dark:bg-ink-950">
+    <div className="flex h-full overflow-hidden bg-ink-50 dark:bg-ink-950">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar darkMode={darkMode} setDarkMode={setDarkMode} />

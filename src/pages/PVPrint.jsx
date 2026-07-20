@@ -38,10 +38,13 @@ export default function PVPrint() {
           .no-print { display: none !important; }
           body { margin: 0; }
           .page { box-shadow: none !important; margin: 0 !important; border-radius: 0 !important; }
+          .pv-scroll { position: static !important; overflow: visible !important; height: auto !important; }
         }
         body { background: #e5e7eb; margin: 0; font-family: Arial, Helvetica, sans-serif; }
         * { box-sizing: border-box; }
       `}</style>
+
+      <div className="pv-scroll scroll-area" style={{ position: 'absolute', inset: 0, overflowY: 'auto', background: '#e5e7eb' }}>
 
       {/* Toolbar - ascuns la print */}
       <div className="no-print" style={{
@@ -203,6 +206,7 @@ export default function PVPrint() {
         <div style={{ marginTop: 24, paddingTop: 10, borderTop: '1px solid #e5e7eb', textAlign: 'center', color: '#9ca3af', fontSize: 10 }}>
           Document generat de Gestiune Utilaje
         </div>
+      </div>
       </div>
     </>
   );

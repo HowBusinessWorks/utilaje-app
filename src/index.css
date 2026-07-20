@@ -2,6 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Native-app shell lock (unlayered so nothing overrides it)
+   - The document itself never scrolls or rubber-bands. Only the
+     inner .scroll-area (main content, panels, modals) scrolls.
+   - Swiping a static bar (topbar / bottom nav) does nothing.
+   - No scrollbars anywhere. No pinch-zoom, no text-selection
+     magnifier, no tap-highlight — reads like a real app, not a page.
+   ============================================================ */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  margin: 0;
+  padding: 0;
+}
+/* Body pinned to the viewport so the page itself can never scroll or
+   rubber-band — the canonical iOS lock. Inner .scroll-area does the scrolling. */
+body {
+  position: fixed;
+  inset: 0;
+  touch-action: manipulation;     /* allow taps, block double-tap zoom */
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;    /* no long-press image/link menu */
+}
+* {
+  -webkit-tap-highlight-color: transparent;   /* no grey flash on tap */
+}
+/* Text stays selectable where it actually matters. */
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Only elements meant to scroll do so — with momentum, no chaining. */
+.scroll-area {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Hide every scrollbar app-wide (scroll still works by touch/wheel/keys). */
+* {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* legacy Edge/IE */
+}
+*::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none;                  /* Chrome / Safari / new Edge */
+}
+
 @layer base {
   :root {
     --sidebar-width: 260px;
@@ -36,23 +91,6 @@
 }
 
 @layer components {
-  /* ---- No scrollbars anywhere (scroll still works by touch/wheel/keys) ----
-     App-wide we hide every scrollbar so stacked scroll containers (page main,
-     modals, side panels, dropdowns) never show overlapping scrollbar chrome. */
-  * {
-    scrollbar-width: none;      /* Firefox */
-    -ms-overflow-style: none;   /* legacy Edge/IE */
-  }
-  *::-webkit-scrollbar {
-    width: 0 !important;
-    height: 0 !important;
-    display: none;              /* Chrome / Safari / new Edge */
-  }
-  *::-webkit-scrollbar-track { background: transparent; }
-  *::-webkit-scrollbar-thumb { background: transparent; }
-  *::-webkit-scrollbar-corner { background: transparent; }
-  *::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-
   /* ---- Reusable control surfaces ---- */
   .field {
     @apply w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900

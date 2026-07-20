@@ -30,7 +30,7 @@ export function useToast() {
 // Ecran de incarcare cat timp se valideaza sesiunea
 function AuthLoading() {
   return (
-    <div className="grid min-h-screen place-items-center bg-ink-50 dark:bg-ink-950">
+    <div className="grid h-full place-items-center bg-ink-50 dark:bg-ink-950">
       <IconSpinner size={28} className="animate-spin text-brand-500" />
     </div>
   );
@@ -88,8 +88,8 @@ export default function App() {
       <AuthProvider>
       <InboxProvider>
       <BrowserRouter>
-        <div className={darkMode ? 'dark' : ''}>
-          <div className="min-h-screen bg-ink-50 font-sans text-ink-900 antialiased dark:bg-ink-950 dark:text-ink-100">
+        <div className={`h-full ${darkMode ? 'dark' : ''}`}>
+          <div className="h-full overflow-hidden bg-ink-50 font-sans text-ink-900 antialiased dark:bg-ink-950 dark:text-ink-100">
             <Routes>
               <Route path="/login" element={<LoginRoute />} />
               <Route path="procese-verbale/:id/print" element={<RequireAuth roles={['sef_santier', 'admin']}><PVPrint /></RequireAuth>} />

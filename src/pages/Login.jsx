@@ -40,7 +40,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-ink-50 px-4 py-10 dark:bg-ink-950">
+    <div className="scroll-area flex h-full items-center justify-center overflow-y-auto bg-ink-50 px-4 py-10 dark:bg-ink-950">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
