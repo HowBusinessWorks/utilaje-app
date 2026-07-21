@@ -2,6 +2,7 @@
 import {
   IconDashboard, IconUtilaj, IconFuel, IconRepair, IconCalendar,
   IconClipboard, IconWork, IconMap, IconPeople, IconReports, IconRequest,
+  IconObservatie,
 } from './components/icons';
 
 export const adminNav = [
@@ -19,6 +20,7 @@ export const adminNav = [
       { to: '/reparatii', label: 'Reparatii', Icon: IconRepair },
       { to: '/planificare', label: 'Planificari', Icon: IconCalendar },
       { to: '/procese-verbale', label: 'Procese verbale', Icon: IconClipboard },
+      { to: '/observatii', label: 'Observatii', Icon: IconObservatie },
     ],
   },
   {
@@ -44,6 +46,7 @@ export const sefNav = [
       { to: '/solicitari', label: 'Solicitari', Icon: IconRequest },
       { to: '/pv-mele', label: 'Procese verbale', Icon: IconClipboard },
       { to: '/motorina-mea', label: 'Motorina', Icon: IconFuel },
+      { to: '/observatii', label: 'Observatii', Icon: IconObservatie },
     ],
   },
 ];

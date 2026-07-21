@@ -53,4 +53,7 @@ export {
   CalendarCheck as IconCalendarCheck,
   Hourglass as IconHourglass,
   ArrowSquareOut as IconOpen,
+  WarningOctagon as IconObservatie,
+  ChatText as IconMessage,
+  Wrench as IconWrench,
 } from '@phosphor-icons/react';

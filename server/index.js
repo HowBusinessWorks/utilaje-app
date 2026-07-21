@@ -16,6 +16,7 @@ app.use('/api/utilaje',     requireAuth, require('./routes/utilaje'));
 app.use('/api/planificari', requireAuth, require('./routes/planificari'));
 app.use('/api/motorina',    requireAuth, require('./routes/motorina'));
 app.use('/api/pvp',         requireAuth, require('./routes/pvp'));
+app.use('/api/observatii',  requireAuth, require('./routes/observatii'));
 app.use('/api/reparatii',   requireAuth, require('./routes/reparatii'));
 app.use('/api/lucrari',     requireAuth, require('./routes/lucrari'));
 app.use('/api/persoane',    requireAuth, require('./routes/persoane'));

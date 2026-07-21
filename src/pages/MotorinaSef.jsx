@@ -3,7 +3,7 @@ import { api } from '../api';
 import { useToast } from '../App';
 import Modal from '../components/Modal';
 import Select from '../components/Select';
-import { IconPlus, IconFuel, IconClip, IconFile, IconClose, IconCalendar, IconWarning, IconEdit, IconTrash } from '../components/icons';
+import { IconPlus, IconFuel, IconClip, IconFile, IconClose, IconCalendar, IconWarning } from '../components/icons';
 
 function todayStr() {
   const d = new Date();
@@ -24,7 +24,6 @@ export default function MotorinaSef() {
   const [fise, setFise] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
   const [pendingFile, setPendingFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -50,23 +49,8 @@ export default function MotorinaSef() {
 
   const openNew = () => {
     if (pvDeschise.length === 0) return;
-    setEditing(null);
     setPendingFile(null);
     setForm({ ...emptyForm, utilaj_id: pvDeschise.length === 1 ? String(pvDeschise[0].utilaj_id) : '' });
-    setModalOpen(true);
-  };
-
-  const openEdit = (fisa) => {
-    setEditing(fisa);
-    setPendingFile(null);
-    setForm({
-      utilaj_id: String(fisa.utilaj_id),
-      data_consum: fisa.data_consum,
-      nr_litri: String(fisa.nr_litri),
-      furnizor: fisa.furnizor || '',
-      ore_contor: String(fisa.ore_contor || ''),
-      observatii: fisa.observatii || '',
-    });
     setModalOpen(true);
   };
 
@@ -77,34 +61,17 @@ export default function MotorinaSef() {
     if (!canSubmit) return;
     setSubmitting(true);
     try {
-      let id;
-      if (editing) {
-        await api.put(`/motorina/${editing.id}`, form);
-        id = editing.id;
-        toast('Fisa actualizata');
-      } else {
-        const result = await api.post('/motorina', form);
-        id = result.id;
-        toast('Fisa de motorina adaugata');
-      }
+      const result = await api.post('/motorina', form);
+      toast('Fisa de motorina adaugata');
       if (pendingFile) {
         const fd = new FormData();
         fd.append('document', pendingFile);
-        await api.upload(`/motorina/${id}/document`, fd);
+        await api.upload(`/motorina/${result.id}/document`, fd);
       }
       setModalOpen(false);
       load();
     } catch (e) { toast(e.message, 'error'); }
     finally { setSubmitting(false); }
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm('Stergi aceasta fisa de motorina?')) return;
-    try {
-      await api.delete(`/motorina/${id}`);
-      toast('Fisa stearsa');
-      load();
-    } catch (e) { toast(e.message, 'error'); }
   };
 
   const utilajOptions = pvDeschise.map(pv => ({ value: String(pv.utilaj_id), label: pv.utilaj_denumire }));
@@ -154,44 +121,48 @@ export default function MotorinaSef() {
       ) : (
         <div className="space-y-2.5">
           {fise.map(f => (
-            <div key={f.id} className="card p-4">
-              <div className="mb-1.5 flex items-center justify-between gap-2">
-                <span className="truncate font-semibold text-ink-900 dark:text-white">{f.utilaj_denumire}</span>
-                <span className="shrink-0 text-lg font-semibold tabular text-brand-600 dark:text-brand-400">{f.nr_litri} L</span>
-              </div>
-              <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ink-500">
-                <span className="flex items-center gap-1"><IconCalendar size={13} /> {fmtDate(f.data_consum)}</span>
-                {f.furnizor && <span>{f.furnizor}</span>}
-                {f.lucrare_nume && <span className="truncate">{f.lucrare_nume}</span>}
-                {f.ore_contor ? <span>{f.ore_contor} h contor</span> : null}
-              </div>
-              {f.observatii && <p className="mb-2 text-sm text-ink-600 dark:text-ink-300">{f.observatii}</p>}
-              <div className="flex items-center justify-between gap-2 border-t border-ink-100 pt-2.5 dark:border-ink-800">
-                {f.document_url ? (
-                  <a href={f.document_url} target="_blank" rel="noreferrer"
-                    className="flex min-w-0 items-center gap-1.5 text-xs text-brand-600 hover:underline dark:text-brand-400">
-                    <IconFile size={14} /> <span className="truncate">{docName(f.document_url)}</span>
-                  </a>
-                ) : <span />}
-                <div className="flex shrink-0 gap-1">
-                  <button onClick={() => openEdit(f)} className="grid h-8 w-8 place-items-center rounded-lg text-ink-500 hover:bg-ink-100 hover:text-ink-700 dark:hover:bg-ink-800" aria-label="Editeaza"><IconEdit size={16} /></button>
-                  <button onClick={() => handleDelete(f.id)} className="grid h-8 w-8 place-items-center rounded-lg text-ink-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10" aria-label="Sterge"><IconTrash size={16} /></button>
+            <div key={f.id} className="card overflow-hidden">
+              <div className="flex items-start gap-3 p-3.5">
+                <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
+                  <IconFuel size={18} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="min-w-0 truncate font-semibold text-ink-900 dark:text-white">{f.utilaj_denumire}</span>
+                    <span className="ml-auto shrink-0 text-base font-semibold tabular text-brand-600 dark:text-brand-400">{f.nr_litri} L</span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-500">
+                    <span className="flex items-center gap-1"><IconCalendar size={12} /> {fmtDate(f.data_consum)}</span>
+                    {f.furnizor && <span>· {f.furnizor}</span>}
+                    {f.ore_contor ? <span className="shrink-0">· {f.ore_contor} h contor</span> : null}
+                  </div>
                 </div>
               </div>
+              {(f.observatii || f.document_url) && (
+                <div className="space-y-2 border-t border-ink-100 px-3.5 py-2.5 dark:border-ink-800">
+                  {f.observatii && <p className="text-sm text-ink-600 dark:text-ink-300">{f.observatii}</p>}
+                  {f.document_url && (
+                    <a href={f.document_url} target="_blank" rel="noreferrer"
+                      className="flex min-w-0 items-center gap-1.5 text-xs text-brand-600 hover:underline dark:text-brand-400">
+                      <IconFile size={14} /> <span className="truncate">{docName(f.document_url)}</span>
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
       {/* Modal formular */}
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editeaza fisa de motorina' : 'Fisa de motorina noua'}>
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Fisa de motorina noua">
         <form onSubmit={handleSave} className="space-y-4">
           <div>
             <label className="mb-1.5 block text-[13px] font-medium text-ink-600 dark:text-ink-300">
               Utilaj <span className="text-brand-500">*</span>
             </label>
             <Select value={form.utilaj_id} onChange={v => setForm(f => ({ ...f, utilaj_id: v }))}
-              placeholder="Selecteaza utilaj" options={utilajOptions} disabled={!!editing} />
+              placeholder="Selecteaza utilaj" options={utilajOptions} />
             <p className="mt-1 text-xs text-ink-400">Doar utilajele cu proces verbal deschis pe numele tau.</p>
           </div>
 
@@ -227,12 +198,6 @@ export default function MotorinaSef() {
 
           <div>
             <label className="mb-2 block text-[13px] font-medium text-ink-600 dark:text-ink-300">Bon / factura (poza)</label>
-            {editing?.document_url && !pendingFile && (
-              <div className="mb-2 flex items-center gap-2 rounded-lg bg-ink-50 p-2 text-sm dark:bg-ink-800">
-                <IconFile size={16} className="text-ink-400" />
-                <a href={editing.document_url} target="_blank" rel="noreferrer" className="flex-1 truncate text-brand-600 hover:underline dark:text-brand-400">{docName(editing.document_url)}</a>
-              </div>
-            )}
             {pendingFile && (
               <div className="mb-2 flex items-center gap-2 rounded-lg bg-brand-50 p-2 text-sm dark:bg-brand-500/10">
                 <IconFile size={16} className="text-brand-500" />
@@ -252,7 +217,7 @@ export default function MotorinaSef() {
             <button type="submit" disabled={!canSubmit || submitting} className="btn-primary h-11 flex-1 disabled:cursor-not-allowed disabled:opacity-50">
               {submitting ? 'Se salveaza…' : 'Salveaza'}
             </button>
-            <button type="button" onClick={() => setModalOpen(false)} className="btn-ghost h-11 flex-1">Anuleaza</button>
+            <button type="button" onClick={() => setModalOpen(false)} className="btn-ghost-danger h-11 flex-1">Anuleaza</button>
           </div>
         </form>
       </Modal>

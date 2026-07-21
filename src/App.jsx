@@ -20,6 +20,8 @@ import Solicitari from './pages/Solicitari';
 import PVSef from './pages/PVSef';
 import PVPrint from './pages/PVPrint';
 import MotorinaSef from './pages/MotorinaSef';
+import Observatii from './pages/Observatii';
+import ObservatiiAdmin from './pages/ObservatiiAdmin';
 
 export const ToastContext = createContext(null);
 
@@ -46,6 +48,12 @@ function RequireAuth({ roles, children }) {
     return <Navigate to={user.role === 'admin' ? '/dashboard' : '/solicitari'} replace />;
   }
   return children;
+}
+
+// Observatii: admin vede lista completa cu actiuni, seful vede pagina lui.
+function ObservatiiByRole() {
+  const { user } = useAuth();
+  return user?.role === 'admin' ? <ObservatiiAdmin /> : <Observatii />;
 }
 
 // Redirect de la radacina catre pagina de start a rolului
@@ -111,6 +119,7 @@ export default function App() {
                 <Route path="solicitari" element={<RequireAuth roles={['sef_santier', 'admin']}><Solicitari /></RequireAuth>} />
                 <Route path="pv-mele" element={<RequireAuth roles={['sef_santier', 'admin']}><PVSef /></RequireAuth>} />
                 <Route path="motorina-mea" element={<RequireAuth roles={['sef_santier', 'admin']}><MotorinaSef /></RequireAuth>} />
+                <Route path="observatii" element={<RequireAuth roles={['sef_santier', 'admin']}><ObservatiiByRole /></RequireAuth>} />
               </Route>
             </Routes>
             <div className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2.5">

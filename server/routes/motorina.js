@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const supabase = require('../db');
 const { uploadFile, deleteFile } = require('../storage');
+const { requireAdmin } = require('../auth');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -56,17 +57,9 @@ router.post('/', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAdmin, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      const fisa = await loadFisa(req.params.id);
-      if (!fisa || fisa.persoana_id !== req.user.id) return res.status(403).json({ error: 'Acces interzis' });
-    }
     const { utilaj_id, lucrare_id, persoana_id, data_consum, nr_litri, furnizor, ore_contor, observatii } = req.body;
-    if (req.user.role !== 'admin') {
-      const pv = await findOpenPvForSef(utilaj_id, req.user.id);
-      if (!pv) return res.status(403).json({ error: 'Poti alimenta doar utilajul cu proces verbal deschis pe numele tau.' });
-    }
     const { error } = await supabase.from('fise_motorina')
       .update({ utilaj_id, lucrare_id: lucrare_id || null, persoana_id: persoana_id || null,
                 data_consum, nr_litri, furnizor: furnizor || null,
@@ -100,12 +93,8 @@ router.delete('/:id/document', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      const fisa = await loadFisa(req.params.id);
-      if (!fisa || fisa.persoana_id !== req.user.id) return res.status(403).json({ error: 'Acces interzis' });
-    }
     const { error } = await supabase.from('fise_motorina').delete().eq('id', req.params.id);
     if (error) throw error;
     res.json({ ok: true });

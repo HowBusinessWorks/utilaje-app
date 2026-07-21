@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../App';
 import Modal from '../components/Modal';
@@ -18,6 +19,8 @@ function Field({ label, required, children, full }) {
 
 export default function Reparatii() {
   const toast = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [reparatii, setReparatii] = useState([]);
   const [utilaje, setUtilaje] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +30,7 @@ export default function Reparatii() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [pendingDoc, setPendingDoc] = useState(null);
+  const [observatieId, setObservatieId] = useState(null); // obs. sursa la conversie -> reparatie
   const fileRef = useRef(null);
   const [form, setForm] = useState({
     utilaj_id: '', data_reparatie: new Date().toISOString().slice(0, 10),
@@ -54,9 +58,26 @@ export default function Reparatii() {
 
   useEffect(() => { load(); }, [filterUtilaj, filterStart, filterEnd]);
 
+  // Conversie observatie -> reparatie: deschide formularul precompletat.
+  useEffect(() => {
+    const o = location.state?.observatie;
+    if (!o) return;
+    setEditing(null);
+    setPendingDoc(null);
+    setObservatieId(o.id);
+    setForm({
+      utilaj_id: String(o.utilaj_id || ''),
+      data_reparatie: new Date().toISOString().slice(0, 10),
+      furnizor: '', descriere: o.mesaj || '', cost_total: '', ore_contor: '', durata_zile: '', observatii: '',
+    });
+    setModalOpen(true);
+    navigate(location.pathname, { replace: true, state: null }); // consuma state-ul
+  }, [location.state]); // eslint-disable-line
+
   const openNew = () => {
     setEditing(null);
     setPendingDoc(null);
+    setObservatieId(null);
     setForm({ utilaj_id: '', data_reparatie: new Date().toISOString().slice(0, 10), furnizor: '', descriere: '', cost_total: '', ore_contor: '', durata_zile: '', observatii: '' });
     setModalOpen(true);
   };
@@ -64,6 +85,7 @@ export default function Reparatii() {
   const openEdit = (r) => {
     setEditing(r);
     setPendingDoc(null);
+    setObservatieId(null);
     setForm({
       utilaj_id: String(r.utilaj_id),
       data_reparatie: r.data_reparatie,
@@ -96,6 +118,14 @@ export default function Reparatii() {
         const fd = new FormData();
         fd.append('factura', pendingDoc);
         await api.upload(`/reparatii/${id}/factura`, fd);
+      }
+      if (!editing && observatieId) {
+        // Leaga reparatia de observatia sursa si o marcheaza rezolvata.
+        try {
+          await api.post(`/observatii/${observatieId}/rezolva`, { reparatie_id: id });
+          toast('Observatie marcata ca rezolvata');
+        } catch { /* nu blocam reparatia daca legarea esueaza */ }
+        setObservatieId(null);
       }
       setModalOpen(false);
       load();
@@ -194,8 +224,14 @@ export default function Reparatii() {
       )}
 
       {/* Modal */}
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editeaza reparatie' : 'Reparatie noua'}>
+      <Modal isOpen={modalOpen} onClose={() => { setModalOpen(false); setObservatieId(null); }} title={editing ? 'Editeaza reparatie' : 'Reparatie noua'}>
         <form onSubmit={handleSave} className="space-y-5">
+          {observatieId && (
+            <div className="flex items-start gap-2 rounded-lg bg-brand-50 px-3 py-2 text-[13px] text-brand-700 dark:bg-brand-500/10 dark:text-brand-200">
+              <IconRepair size={16} className="mt-0.5 shrink-0" />
+              <span>Reparatie creata dintr-o observatie. La salvare, observatia va fi marcata ca rezolvata.</span>
+            </div>
+          )}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Utilaj" required full>
               <Select value={form.utilaj_id} onChange={v => setForm(f => ({ ...f, utilaj_id: v }))} placeholder="Selecteaza utilaj"
@@ -249,7 +285,7 @@ export default function Reparatii() {
 
           <div className="flex gap-3">
             <button type="submit" className="btn-primary flex-1">Salveaza</button>
-            <button type="button" onClick={() => setModalOpen(false)} className="btn-ghost flex-1">Anuleaza</button>
+            <button type="button" onClick={() => { setModalOpen(false); setObservatieId(null); }} className="btn-ghost flex-1">Anuleaza</button>
           </div>
         </form>
       </Modal>

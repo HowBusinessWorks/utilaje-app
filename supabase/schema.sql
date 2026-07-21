@@ -178,6 +178,21 @@ CREATE TABLE IF NOT EXISTS reparatii_poze (
   url TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS observatii (
+  id SERIAL PRIMARY KEY,
+  pv_id INTEGER REFERENCES procese_verbale(id) ON DELETE CASCADE NOT NULL,
+  utilaj_id INTEGER REFERENCES utilaje(id),
+  persoana_id INTEGER REFERENCES persoane(id),
+  tip TEXT,                       -- defectiune | avarie | intretinere | combustibil | alta
+  mesaj TEXT NOT NULL,
+  status TEXT DEFAULT 'noua',     -- noua | vazuta | rezolvata
+  seen_admin BOOLEAN DEFAULT false,
+  raspuns_admin TEXT,
+  reparatie_id INTEGER REFERENCES fise_reparatii(id) ON DELETE SET NULL,
+  reviewed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =============================================
 -- VIEWS — flat joins used by API list queries
 -- =============================================
@@ -261,6 +276,18 @@ CREATE OR REPLACE VIEW v_reparatii AS
 SELECT fr.*, u.denumire AS utilaj_denumire, u.alias AS utilaj_alias
 FROM fise_reparatii fr
 LEFT JOIN utilaje u ON fr.utilaj_id = u.id;
+
+CREATE OR REPLACE VIEW v_observatii AS
+SELECT o.*,
+  u.denumire AS utilaj_denumire, u.alias AS utilaj_alias,
+  pv.status AS pv_status, pv.lucrare_id,
+  l.nume AS lucrare_nume,
+  p.nume AS persoana_nume
+FROM observatii o
+LEFT JOIN utilaje u ON o.utilaj_id = u.id
+LEFT JOIN procese_verbale pv ON o.pv_id = pv.id
+LEFT JOIN lucrari l ON pv.lucrare_id = l.id
+LEFT JOIN persoane p ON o.persoana_id = p.id;
 
 -- =============================================
 -- FUNCTIONS — complex queries via rpc()

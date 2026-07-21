@@ -34,54 +34,61 @@ export function StatusBadge({ status }) {
 }
 
 // Detaliile unei solicitari — reutilizat in inbox, pe pagina Planificare si la sef.
-export function SolicitareBody({ sol, showSolicitant = false }) {
+export function SolicitareBody({ sol, showSolicitant = false, showDetails = true }) {
   const subs = sol.subcontractanti_nume || [];
   return (
-    <div className="space-y-1.5 text-sm">
-      <div className="flex items-center gap-2 font-medium text-ink-900 dark:text-white">
-        {sol.categorie_culoare && (
-          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: sol.categorie_culoare }} />
-        )}
-        <span className="truncate">{sol.categorie_nume || 'Categorie'}</span>
-      </div>
-      <p className="flex items-center gap-1.5 text-ink-600 dark:text-ink-300">
-        <IconCalendar size={14} className="shrink-0 text-ink-400" />
-        {fmtInterval(sol.data_start, sol.data_sfarsit)}
-      </p>
-      {sol.lucrare_nume && (
+    <div className="text-sm">
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2 font-semibold text-ink-900 dark:text-white">
+          <span className="truncate">{sol.categorie_nume || 'Categorie'}</span>
+        </div>
         <p className="flex items-center gap-1.5 text-ink-600 dark:text-ink-300">
-          <IconWork size={14} className="shrink-0 text-ink-400" />
-          <span className="truncate">{sol.lucrare_nume}</span>
+          <IconCalendar size={14} className="shrink-0 text-ink-400" />
+          {fmtInterval(sol.data_start, sol.data_sfarsit)}
         </p>
-      )}
-      {subs.length > 0 && (
-        <p className="flex items-start gap-1.5 text-ink-600 dark:text-ink-300">
-          <IconUser size={14} className="mt-0.5 shrink-0 text-ink-400" />
-          <span>{subs.join(', ')}</span>
-        </p>
-      )}
-      {showSolicitant && sol.solicitant_nume && (
-        <p className="flex items-center gap-1.5 text-ink-500">
-          <IconUser size={14} className="shrink-0 text-ink-400" />
-          <span className="truncate">Solicitat de {sol.solicitant_nume}</span>
-        </p>
-      )}
-      {sol.nota && (
-        <p className="rounded-lg bg-ink-50 px-2.5 py-1.5 text-[13px] text-ink-600 dark:bg-ink-800/60 dark:text-ink-300">
-          {sol.nota}
-        </p>
-      )}
-      {sol.status === 'acceptata' && sol.utilaj_denumire && (
-        <p className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
-          <IconUtilaj size={14} className="shrink-0" />
-          <span className="truncate">Alocat: {sol.utilaj_denumire}</span>
-        </p>
-      )}
-      {sol.status === 'respinsa' && sol.motiv_respingere && (
-        <p className="rounded-lg bg-rose-50 px-2.5 py-1.5 text-[13px] text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
-          Motiv: {sol.motiv_respingere}
-        </p>
-      )}
+        {showSolicitant && sol.solicitant_nume && (
+          <p className="flex items-center gap-1.5 text-ink-500">
+            <IconUser size={14} className="shrink-0 text-ink-400" />
+            <span className="truncate">Solicitat de {sol.solicitant_nume}</span>
+          </p>
+        )}
+      </div>
+
+      {/* Detalii — se plieaza lin la expandare/colapsare */}
+      <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${showDetails ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+        <div className="overflow-hidden">
+          <div className="space-y-1.5 pt-1.5">
+            {sol.lucrare_nume && (
+              <p className="flex items-center gap-1.5 text-ink-600 dark:text-ink-300">
+                <IconWork size={14} className="shrink-0 text-ink-400" />
+                <span className="truncate">{sol.lucrare_nume}</span>
+              </p>
+            )}
+            {subs.length > 0 && (
+              <p className="flex items-start gap-1.5 text-ink-600 dark:text-ink-300">
+                <IconUser size={14} className="mt-0.5 shrink-0 text-ink-400" />
+                <span>{subs.join(', ')}</span>
+              </p>
+            )}
+            {sol.nota && (
+              <p className="rounded-lg bg-ink-50 px-2.5 py-1.5 text-[13px] text-ink-600 dark:bg-ink-800/60 dark:text-ink-300">
+                {sol.nota}
+              </p>
+            )}
+            {sol.status === 'acceptata' && sol.utilaj_denumire && (
+              <p className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300">
+                <IconUtilaj size={14} className="shrink-0" />
+                <span className="truncate">Alocat: {sol.utilaj_denumire}</span>
+              </p>
+            )}
+            {sol.status === 'respinsa' && sol.motiv_respingere && (
+              <p className="rounded-lg bg-rose-50 px-2.5 py-1.5 text-[13px] text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
+                Motiv: {sol.motiv_respingere}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

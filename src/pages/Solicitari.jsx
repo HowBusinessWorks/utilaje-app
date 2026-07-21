@@ -5,7 +5,37 @@ import { useInbox } from '../inbox';
 import Select from '../components/Select';
 import Modal from '../components/Modal';
 import { StatusBadge, SolicitareBody, fmtDate } from '../components/solicitari';
-import { IconRequest, IconCheck, IconUtilaj, IconSpinner, IconPlus } from '../components/icons';
+import { IconRequest, IconCheck, IconUtilaj, IconSpinner, IconPlus, IconCaretDown } from '../components/icons';
+
+function MineCard({ sol }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasDetails = !!(
+    sol.lucrare_nume ||
+    (sol.subcontractanti_nume || []).length ||
+    sol.nota ||
+    (sol.status === 'acceptata' && sol.utilaj_denumire) ||
+    (sol.status === 'respinsa' && sol.motiv_respingere)
+  );
+  return (
+    <button
+      type="button"
+      onClick={() => hasDetails && setExpanded(e => !e)}
+      className={`card w-full p-4 text-left ${hasDetails ? 'cursor-pointer' : 'cursor-default'}`}
+    >
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <StatusBadge status={sol.status} />
+        <span className="text-[11px] text-ink-400">{fmtDate((sol.created_at || '').slice(0, 10))}</span>
+      </div>
+      <SolicitareBody sol={sol} showDetails={expanded} />
+      {hasDetails && (
+        <span className="mt-2 flex items-center gap-1 text-[12px] font-medium text-ink-400">
+          <IconCaretDown size={13} weight="bold" className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          {expanded ? 'Mai putine detalii' : 'Vezi detalii'}
+        </span>
+      )}
+    </button>
+  );
+}
 
 function todayStr() {
   const d = new Date();
@@ -128,7 +158,7 @@ export default function Solicitari() {
 
   const selectedCat = categorii.find(c => String(c.id) === String(form.categorie_id));
 
-  const formBody = (
+  const renderForm = ({ onExit } = {}) => (
     <>
       {/* FORMULAR */}
       <div className="card space-y-7 p-5 sm:p-6">
@@ -150,7 +180,6 @@ export default function Solicitari() {
                         ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-500/20 dark:border-brand-500 dark:bg-brand-500/10'
                         : 'border-ink-200 hover:border-ink-300 hover:bg-ink-50 dark:border-ink-700 dark:hover:border-ink-600 dark:hover:bg-ink-800/50'
                     }`}>
-                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: c.culoare || '#5b8af0' }} />
                     <span className={`text-sm font-medium ${sel ? 'text-brand-800 dark:text-brand-200' : 'text-ink-800 dark:text-ink-200'}`}>
                       {c.nume}
                     </span>
@@ -257,6 +286,15 @@ export default function Solicitari() {
               Completeaza categoria, perioada, lucrarea si cel putin un subcontractant.
             </p>
           )}
+          {onExit && (
+            <button
+              type="button"
+              onClick={onExit}
+              className="mt-4 block w-full text-center text-sm font-medium text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
+            >
+              Iesi fara sa trimiti
+            </button>
+          )}
         </div>
       </div>
     </>
@@ -278,19 +316,12 @@ export default function Solicitari() {
 
       {/* FORMULAR - inline pe laptop */}
       <div className="hidden lg:block">
-        {formBody}
+        {renderForm()}
       </div>
 
       {/* FORMULAR - modal pe mobil, deschis din butonul + */}
       <Modal isOpen={formOpen} onClose={requestCloseForm} title="Solicita un utilaj" size="lg">
-        {formBody}
-        <button
-          type="button"
-          onClick={requestCloseForm}
-          className="mt-3 block w-full text-center text-sm font-medium text-ink-500 hover:text-ink-700 dark:hover:text-ink-300"
-        >
-          Iesi fara sa trimiti
-        </button>
+        {renderForm({ onExit: requestCloseForm })}
       </Modal>
 
       {/* Confirmare renuntare - datele completate se pierd */}
@@ -309,7 +340,7 @@ export default function Solicitari() {
           <button
             type="button"
             onClick={discardForm}
-            className="h-10 flex-1 rounded-xl bg-red-600 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+            className="btn-danger h-10 flex-1 rounded-xl"
           >
             Iesi si renunta
           </button>
@@ -319,23 +350,21 @@ export default function Solicitari() {
       {/* SOLICITARILE MELE */}
       <div>
         <h2 className="mb-3 hidden text-[15px] font-semibold text-ink-900 dark:text-white lg:block">Solicitarile mele</h2>
-        {mine.length === 0 ? (
+        {loading ? (
+          <div className="space-y-2.5">
+            {Array.from({ length: 3 }).map((_, i) => <div key={i} className="card h-24 animate-pulse" />)}
+          </div>
+        ) : mine.length === 0 ? (
           <div className="card py-10 text-center text-sm text-ink-500">
             Nu ai trimis inca nicio solicitare.
-            <button onClick={() => setFormOpen(true)} className="mt-3 block text-sm font-medium text-brand-600 lg:hidden">
+            <button onClick={() => setFormOpen(true)} className="mt-3 block w-full text-center text-sm font-medium text-brand-600 lg:hidden">
               Trimite prima solicitare
             </button>
           </div>
         ) : (
           <div className="space-y-2.5">
             {mine.map(sol => (
-              <div key={sol.id} className="card p-4">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <StatusBadge status={sol.status} />
-                  <span className="text-[11px] text-ink-400">{fmtDate((sol.created_at || '').slice(0, 10))}</span>
-                </div>
-                <SolicitareBody sol={sol} />
-              </div>
+              <MineCard key={sol.id} sol={sol} />
             ))}
           </div>
         )}
