@@ -4,9 +4,9 @@ import { useToast } from '../App';
 import Modal from '../components/Modal';
 import Select from '../components/Select';
 import { IconPlus, IconObservatie, IconCalendar, IconWarning, IconUtilaj, IconMessage } from '../components/icons';
-import { TIPURI, TipBadge, fmtDateTime } from '../components/observatii';
+import { TIPURI, TipBadge, fmtDateTime, PozePicker, PozeIndicator } from '../components/observatii';
 
-const emptyForm = { pv_id: '', tip: '', mesaj: '' };
+const emptyForm = { pv_id: '', tip: '', mesaj: '', poze: [] };
 
 export default function Observatii() {
   const toast = useToast();
@@ -120,8 +120,9 @@ export default function Observatii() {
                     {o.pv_status === 'inchis' && <span className="shrink-0 text-ink-400">· PV inchis</span>}
                   </div>
                 </div>
+                <PozeIndicator observatieId={o.id} count={o.poze_count} />
               </div>
-              <div className="border-t border-ink-100 px-3.5 py-2.5 dark:border-ink-800">
+              <div className="space-y-2 border-t border-ink-100 px-3.5 py-2.5 dark:border-ink-800">
                 <p className="whitespace-pre-line text-sm text-ink-700 dark:text-ink-200">{o.mesaj}</p>
                 {o.raspuns_admin && (
                   <p className="mt-2 whitespace-pre-line rounded-lg bg-brand-50 px-2.5 py-2 text-[13px] text-brand-700 dark:bg-brand-500/10 dark:text-brand-200">
@@ -162,6 +163,8 @@ export default function Observatii() {
               onChange={e => setForm(f => ({ ...f, mesaj: e.target.value }))}
               className="field resize-none" placeholder="Descrie pe scurt ce s-a intamplat…" />
           </div>
+
+          <PozePicker value={form.poze} onChange={poze => setForm(f => ({ ...f, poze }))} />
 
           <div className="flex gap-3">
             <button type="submit" disabled={!canSubmit || submitting} className="btn-primary h-11 flex-1 disabled:cursor-not-allowed disabled:opacity-50">

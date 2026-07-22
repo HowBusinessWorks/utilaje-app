@@ -130,7 +130,7 @@ export default function Inbox() {
                 {noi.map(sol => (
                   <div key={sol.id} className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 dark:border-amber-500/30 dark:bg-amber-500/5">
                     <div className="mb-2 flex items-center justify-between gap-2">
-                      <StatusBadge status={sol.status} />
+                      <StatusBadge status={sol.status} className="-ml-2" />
                       <span className="text-[11px] text-ink-400">{fmtDate((sol.created_at || '').slice(0, 10))}</span>
                     </div>
                     <SolicitareBody sol={sol} showSolicitant />
@@ -151,7 +151,7 @@ export default function Inbox() {
                 {restul.map(sol => (
                   <div key={sol.id} className="rounded-xl border border-ink-200/70 p-3 dark:border-ink-800">
                     <div className="mb-2 flex items-center justify-between gap-2">
-                      <StatusBadge status={sol.status} />
+                      <StatusBadge status={sol.status} className="-ml-2" />
                       <span className="text-[11px] text-ink-400">{fmtDate((sol.created_at || '').slice(0, 10))}</span>
                     </div>
                     <SolicitareBody sol={sol} showSolicitant={isAdmin} />

@@ -193,6 +193,14 @@ CREATE TABLE IF NOT EXISTS observatii (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS observatii_poze (
+  id SERIAL PRIMARY KEY,
+  observatie_id INTEGER REFERENCES observatii(id) ON DELETE CASCADE NOT NULL,
+  mime_type TEXT NOT NULL DEFAULT 'image/jpeg',
+  data_base64 TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =============================================
 -- VIEWS — flat joins used by API list queries
 -- =============================================
@@ -282,12 +290,17 @@ SELECT o.*,
   u.denumire AS utilaj_denumire, u.alias AS utilaj_alias,
   pv.status AS pv_status, pv.lucrare_id,
   l.nume AS lucrare_nume,
-  p.nume AS persoana_nume
+  p.nume AS persoana_nume,
+  COALESCE(pz.poze_count, 0) AS poze_count
 FROM observatii o
 LEFT JOIN utilaje u ON o.utilaj_id = u.id
 LEFT JOIN procese_verbale pv ON o.pv_id = pv.id
 LEFT JOIN lucrari l ON pv.lucrare_id = l.id
-LEFT JOIN persoane p ON o.persoana_id = p.id;
+LEFT JOIN persoane p ON o.persoana_id = p.id
+LEFT JOIN (
+  SELECT observatie_id, COUNT(*) AS poze_count
+  FROM observatii_poze GROUP BY observatie_id
+) pz ON pz.observatie_id = o.id;
 
 -- =============================================
 -- FUNCTIONS — complex queries via rpc()

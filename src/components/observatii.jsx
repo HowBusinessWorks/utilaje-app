@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useToast } from '../App';
@@ -6,6 +6,7 @@ import Modal from './Modal';
 import {
   IconUtilaj, IconCalendar, IconWork, IconUser,
   IconEye, IconMessage, IconWrench, IconHourglass, IconCheckCircle,
+  IconCamera, IconImage, IconClose, IconSpinner,
 } from './icons';
 
 // Tipurile de observatie pe care le poate raporta seful de santier.
@@ -59,6 +60,164 @@ export function fmtDateTime(d) {
   return `${p(dt.getDate())}.${p(dt.getMonth() + 1)}.${dt.getFullYear()}, ${p(dt.getHours())}:${p(dt.getMinutes())}`;
 }
 
+export const MAX_POZE = 5;
+
+// Redimensioneaza/comprima o poza in browser inainte de a o trimite ca base64,
+// ca sa nu incarcam fotografii de cativa MB facute direct din camera telefonului.
+function compressImage(file, maxSize = 1280, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxSize || height > maxSize) {
+        const scale = maxSize / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Fisier invalid.')); };
+    img.src = url;
+  });
+}
+
+// Selector de poze pentru formularul de observatie noua: camera sau galerie,
+// cu previzualizare si eliminare inainte de trimitere. `value` e o lista de data URL-uri.
+export function PozePicker({ value, onChange }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+  const cameraRef = useRef(null);
+  const galleryRef = useRef(null);
+
+  const handleFiles = async (fileList) => {
+    const files = Array.from(fileList || []);
+    if (files.length === 0) return;
+    const slots = MAX_POZE - value.length;
+    if (slots <= 0) { toast(`Poti atasa cel mult ${MAX_POZE} poze.`, 'error'); return; }
+    setBusy(true);
+    try {
+      const compressed = await Promise.all(files.slice(0, slots).map(f => compressImage(f)));
+      onChange([...value, ...compressed]);
+    } catch (e) {
+      toast(e.message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = (idx) => onChange(value.filter((_, i) => i !== idx));
+
+  return (
+    <div>
+      <label className="mb-1.5 block text-[13px] font-medium text-ink-600 dark:text-ink-300">
+        Poze <span className="font-normal text-ink-400">(optional, max {MAX_POZE})</span>
+      </label>
+
+      {value.length > 0 && (
+        <div className="mb-2.5 grid grid-cols-4 gap-2">
+          {value.map((src, idx) => (
+            <div key={idx} className="group relative aspect-square overflow-hidden rounded-lg border border-ink-200 dark:border-ink-700">
+              <img src={src} alt="" className="h-full w-full object-cover" />
+              <button type="button" onClick={() => remove(idx)}
+                className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-ink-950/70 text-white">
+                <IconClose size={12} weight="bold" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {value.length < MAX_POZE && (
+        <div className="flex gap-2">
+          <button type="button" disabled={busy} onClick={() => cameraRef.current?.click()}
+            className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-ink-200 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50 disabled:opacity-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800">
+            {busy ? <IconSpinner size={15} className="animate-spin" /> : <IconCamera size={15} weight="bold" />} Camera
+          </button>
+          <button type="button" disabled={busy} onClick={() => galleryRef.current?.click()}
+            className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-ink-200 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50 disabled:opacity-50 dark:border-ink-700 dark:text-ink-200 dark:hover:bg-ink-800">
+            {busy ? <IconSpinner size={15} className="animate-spin" /> : <IconImage size={15} weight="bold" />} Galerie
+          </button>
+        </div>
+      )}
+
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden"
+        onChange={e => { handleFiles(e.target.files); e.target.value = ''; }} />
+      <input ref={galleryRef} type="file" accept="image/*" multiple className="hidden"
+        onChange={e => { handleFiles(e.target.files); e.target.value = ''; }} />
+    </div>
+  );
+}
+
+// Iconul din dreapta cardului unei observatii cu poze atasate. La click deschide
+// un popup cu galeria (incarcata la cerere), iar din galerie se poate mari fiecare poza.
+export function PozeIndicator({ observatieId, count, className = '' }) {
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [poze, setPoze] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [zoomed, setZoomed] = useState(null);
+
+  if (!count) return null;
+
+  const openModal = (e) => {
+    e.stopPropagation();
+    setOpen(true);
+    if (poze === null) {
+      setLoading(true);
+      api.get(`/observatii/${observatieId}/poze`)
+        .then(setPoze)
+        .catch(err => toast('Eroare la incarcarea pozelor: ' + err.message, 'error'))
+        .finally(() => setLoading(false));
+    }
+  };
+
+  return (
+    <>
+      <button type="button" onClick={openModal}
+        className={`ml-auto flex shrink-0 items-center gap-1 rounded-full bg-ink-100 px-2 py-0.5 text-[11px] font-medium text-ink-600 transition-colors hover:bg-ink-200 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700 ${className}`}
+        title="Vezi pozele atasate">
+        <IconImage size={12} weight="fill" /> {count}
+      </button>
+
+      <Modal isOpen={open} onClose={() => setOpen(false)} title="Poze atasate" size="lg">
+        {loading ? (
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {Array.from({ length: Math.min(count, 4) }).map((_, i) => (
+              <div key={i} className="aspect-square animate-pulse rounded-lg bg-ink-100 dark:bg-ink-800" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {(poze || []).map(p => (
+              <button key={p.id} type="button" onClick={() => setZoomed(p)}
+                className="aspect-square overflow-hidden rounded-lg border border-ink-200 dark:border-ink-700">
+                <img src={`data:${p.mime_type};base64,${p.data_base64}`} alt="" className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+      </Modal>
+
+      {zoomed && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-ink-950/80 p-4" onClick={() => setZoomed(null)}>
+          <img src={`data:${zoomed.mime_type};base64,${zoomed.data_base64}`} alt=""
+            className="max-h-full max-w-full rounded-lg object-contain" />
+          <button type="button" onClick={() => setZoomed(null)}
+            className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20">
+            <IconClose size={18} weight="bold" />
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
 // Detaliile unei observatii — reutilizat in inbox si pe pagina de admin.
 export function ObservatieBody({ obs, showSef = false }) {
   return (
@@ -67,6 +226,7 @@ export function ObservatieBody({ obs, showSef = false }) {
         <IconUtilaj size={15} className="shrink-0 text-ink-400" />
         <span className="min-w-0 truncate font-medium text-ink-900 dark:text-white">{obs.utilaj_denumire}</span>
         <TipBadge tip={obs.tip} />
+        <PozeIndicator observatieId={obs.id} count={obs.poze_count} />
       </div>
       <p className="flex items-center gap-1.5 text-ink-500">
         <IconCalendar size={14} className="shrink-0 text-ink-400" />

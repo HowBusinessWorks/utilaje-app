@@ -23,7 +23,7 @@ function MineCard({ sol }) {
       className={`card w-full p-4 text-left ${hasDetails ? 'cursor-pointer' : 'cursor-default'}`}
     >
       <div className="mb-2 flex items-center justify-between gap-2">
-        <StatusBadge status={sol.status} />
+        <StatusBadge status={sol.status} className="-ml-2" />
         <span className="text-[11px] text-ink-400">{fmtDate((sol.created_at || '').slice(0, 10))}</span>
       </div>
       <SolicitareBody sol={sol} showDetails={expanded} />

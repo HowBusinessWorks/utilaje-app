@@ -56,4 +56,6 @@ export {
   WarningOctagon as IconObservatie,
   ChatText as IconMessage,
   Wrench as IconWrench,
+  Camera as IconCamera,
+  Image as IconImage,
 } from '@phosphor-icons/react';

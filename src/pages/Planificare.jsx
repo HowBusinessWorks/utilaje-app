@@ -758,7 +758,7 @@ export default function Planificare() {
                           ? 'border-brand-500 bg-brand-50/50 ring-2 ring-brand-500/20 dark:border-brand-500 dark:bg-brand-500/10'
                           : 'border-ink-200/70 dark:border-ink-800'
                       }`}>
-                      <div className="mb-2"><StatusBadge status={sol.status} /></div>
+                      <div className="mb-2"><StatusBadge status={sol.status} className="-ml-2" /></div>
                       <SolicitareBody sol={sol} showSolicitant />
                       <div className="mt-3">
                         <SolicitareActions sol={sol} onDone={onSolicitareDone} />

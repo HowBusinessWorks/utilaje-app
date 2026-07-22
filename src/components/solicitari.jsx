@@ -23,11 +23,11 @@ export function fmtInterval(a, b) {
   return `${fmtDate(a)} – ${fmtDate(b)}`;
 }
 
-export function StatusBadge({ status }) {
+export function StatusBadge({ status, className = '' }) {
   const s = STATUS[status] || STATUS.noua;
   const { Icon } = s;
   return (
-    <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${s.cls}`}>
+    <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ${s.cls} ${className}`}>
       <Icon size={13} weight="fill" /> {s.label}
     </span>
   );

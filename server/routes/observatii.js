@@ -15,6 +15,21 @@ async function loadObservatie(id) {
   return data;
 }
 
+const MAX_POZE = 5;
+const DATA_URL_RE = /^data:(image\/[a-zA-Z0-9+.-]+);base64,([a-zA-Z0-9+/=]+)$/;
+
+// Insereaza pozele (data URL-uri base64) trimise pentru o observatie.
+async function insertPoze(observatie_id, poze) {
+  if (!Array.isArray(poze) || poze.length === 0) return;
+  const rows = poze.slice(0, MAX_POZE).map(p => {
+    const match = typeof p === 'string' ? DATA_URL_RE.exec(p) : null;
+    return match ? { observatie_id, mime_type: match[1], data_base64: match[2] } : null;
+  }).filter(Boolean);
+  if (rows.length === 0) return;
+  const { error } = await supabase.from('observatii_poze').insert(rows);
+  if (error) throw error;
+}
+
 router.get('/', async (req, res) => {
   try {
     let query = supabase.from('v_observatii').select('*').order('created_at', { ascending: false });
@@ -53,7 +68,7 @@ router.post('/mark-seen', requireAdmin, async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { pv_id, tip, mesaj } = req.body;
+    const { pv_id, tip, mesaj, poze } = req.body;
     if (!pv_id) return res.status(400).json({ error: 'Selecteaza un proces verbal.' });
     if (!mesaj || !mesaj.trim()) return res.status(400).json({ error: 'Scrie un mesaj cu ce s-a intamplat.' });
     const pv = await loadPv(pv_id);
@@ -72,6 +87,7 @@ router.post('/', async (req, res) => {
       })
       .select('id').single();
     if (error) throw error;
+    await insertPoze(data.id, poze);
     res.json({ id: data.id });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -95,6 +111,36 @@ router.delete('/:id', requireAdmin, async (req, res) => {
     const obs = await loadObservatie(req.params.id);
     if (!obs) return res.status(404).json({ error: 'Observatie negasita.' });
     const { error } = await supabase.from('observatii').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /:id/poze — pozele atasate unei observatii (incarcate la cerere, nu in lista).
+router.get('/:id/poze', async (req, res) => {
+  try {
+    const obs = await loadObservatie(req.params.id);
+    if (!obs) return res.status(404).json({ error: 'Observatie negasita.' });
+    if (req.user.role !== 'admin' && obs.persoana_id !== req.user.id) {
+      return res.status(403).json({ error: 'Acces interzis.' });
+    }
+    const { data, error } = await supabase.from('observatii_poze')
+      .select('id, mime_type, data_base64, created_at').eq('observatie_id', req.params.id).order('id');
+    if (error) throw error;
+    res.json(data);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// DELETE /:id/poze/:pozaId — sterge o poza gresita.
+router.delete('/:id/poze/:pozaId', async (req, res) => {
+  try {
+    const obs = await loadObservatie(req.params.id);
+    if (!obs) return res.status(404).json({ error: 'Observatie negasita.' });
+    if (req.user.role !== 'admin' && obs.persoana_id !== req.user.id) {
+      return res.status(403).json({ error: 'Acces interzis.' });
+    }
+    const { error } = await supabase.from('observatii_poze')
+      .delete().eq('id', req.params.pozaId).eq('observatie_id', req.params.id);
     if (error) throw error;
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }

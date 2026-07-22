@@ -6,7 +6,7 @@ const { requireAuth } = require('./auth');
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '5mb' }));
+app.use(express.json({ limit: '15mb' })); // observatii pot avea poze base64 atasate
 
 // Autentificare (public)
 app.use('/api/auth', require('./routes/auth'));
